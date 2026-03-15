@@ -54,6 +54,21 @@ export type Recommendation = {
   sampleNotes: string[];
 };
 
+export type UserProfile = {
+  id: string;
+  displayName: string;
+  bio: string | null;
+  avatarUrl: string | null;
+  createdAt: string;
+  stats: {
+    followersCount: number;
+    followingCount: number;
+    ratingsCount: number;
+    averageRating: number | null;
+    favoriteCuisines: string[];
+  };
+};
+
 async function apiFetch<T>(
   path: string,
   options: RequestInit & { token?: string } = {},
@@ -128,5 +143,27 @@ export const api = {
         data: Recommendation[];
         meta: { followingCount: number; candidateRatings: number; limit: number };
       }>(`/recommendations/feed?limit=${limit}`, { token }),
+  },
+  users: {
+    profile: (id: string) => apiFetch<{ profile: UserProfile }>(`/users/${id}`),
+    updateMe: (
+      body: { displayName?: string; bio?: string; avatarUrl?: string },
+      token: string,
+    ) =>
+      apiFetch<{ user: ApiUser }>("/users/me", {
+        method: "PATCH",
+        body: JSON.stringify(body),
+        token,
+      }),
+    follow: (id: string, token: string) =>
+      apiFetch<{ message: string }>(`/users/${id}/follow`, {
+        method: "POST",
+        token,
+      }),
+    unfollow: (id: string, token: string) =>
+      apiFetch<void>(`/users/${id}/follow`, {
+        method: "DELETE",
+        token,
+      }),
   },
 };

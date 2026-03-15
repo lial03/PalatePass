@@ -111,10 +111,14 @@ PalatePass solves this by making discovery social, personalized, and shareable.
 - User profiles: public profile stats, profile update, follow/unfollow APIs
 - Recommendations: social feed based on followed users' high-rated restaurants
 - Automated tests: 28 passing (auth x6, restaurants x11, users x7, recommendations x4)
+- Web UI: login, register, restaurant browse + detail + inline rating, social feed
+- Session security: JWT expiry detection + 15-min inactivity auto-logout
+- User profile page: public stats, favorite cuisines, follow/unfollow, own-profile detection
 
 ### Up next
 
-- Web UI for auth and restaurant browsing
+- Taste Match score between users
+- QR code sharing for profiles and reviews
 - Affiliate partnerships (delivery and reservations)
 
 ## Competitive Advantage
