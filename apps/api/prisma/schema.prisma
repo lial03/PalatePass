@@ -13,10 +13,14 @@ model User {
   email        String       @unique
   passwordHash String
   displayName  String
+  bio          String?
+  avatarUrl    String?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   restaurants  Restaurant[]
   ratings      Rating[]
+  followers    Follow[]     @relation("UserFollowers")
+  following    Follow[]     @relation("UserFollowing")
 }
 
 model Restaurant {
@@ -53,4 +57,15 @@ model Tag {
   id      String   @id @default(cuid())
   name    String   @unique
   ratings Rating[] @relation("RatingTags")
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id])
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
 }

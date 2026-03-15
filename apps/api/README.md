@@ -56,6 +56,13 @@ Then run migrations:
 - `GET /restaurants/:id` — single restaurant with ratings
 - `POST /restaurants/:id/ratings` — add or update rating (auth required; one rating per user per restaurant)
 
+### Users
+
+- `GET /users/:id` — public profile summary with rating stats and top cuisines
+- `PATCH /users/me` — update profile fields (auth required)
+- `POST /users/:id/follow` — follow a user (auth required)
+- `DELETE /users/:id/follow` — unfollow a user (auth required)
+
 ## Example Request Bodies
 
 `POST /auth/register`
@@ -97,5 +104,15 @@ Then run migrations:
   "score": 4,
   "notes": "Great atmosphere and pasta!",
   "tags": ["cozy", "romantic"]
+}
+```
+
+`PATCH /users/me`
+
+```json
+{
+  "displayName": "Lia P",
+  "bio": "Always chasing cozy pasta spots",
+  "avatarUrl": "https://example.com/avatar.jpg"
 }
 ```

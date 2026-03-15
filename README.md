@@ -108,11 +108,11 @@ PalatePass solves this by making discovery social, personalized, and shareable.
 - Auth: register, login, `/me` — Prisma + Supabase + JWT + bcrypt
 - Restaurant model: create, list (with filters + pagination), get by id
 - Ratings: add or update rating per user per restaurant, tag system
-- Automated tests: 17 passing (auth x6, restaurants x11)
+- User profiles: public profile stats, profile update, follow/unfollow APIs
+- Automated tests: 24 passing (auth x6, restaurants x11, users x7)
 
 ### Up next
 
-- User profiles (public profile page, follow system)
 - Feed / recommendations (restaurants rated highly by followed users)
 - Web UI for auth and restaurant browsing
 - Affiliate partnerships (delivery and reservations)
@@ -151,28 +151,6 @@ PalatePass/
 - `npm run build`
 - `npm run lint`
 - `npm run check:api`
-
-## Current Implementation Status
-
-### Web
-
-- Next.js app scaffolded in `apps/web`
-- MVP landing page and theme foundation implemented
-
-### API
-
-- Express + TypeScript scaffolded in `apps/api`
-- Auth foundation implemented:
-  - `POST /auth/register`
-  - `POST /auth/login`
-  - `GET /auth/me`
-- Prisma + PostgreSQL integrated with Supabase-compatible environment setup
-- Initial `User` model and first migration created
-
-### Testing
-
-- Automated API auth tests added with Vitest + Supertest
-- CI runs web lint, API tests, API typecheck, and workspace build
 
 ## CI/CD
 
