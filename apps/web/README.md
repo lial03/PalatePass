@@ -1,9 +1,15 @@
-# Web App (Planned)
+# PalatePass Web
 
-Planned stack: Next.js + Tailwind CSS.
+Next.js App Router frontend for the PalatePass web MVP.
 
-## Suggested bootstrap
+## Commands
 
-1. From repo root: `npm create next-app@latest apps/web`
-2. Keep TypeScript enabled.
-3. Add Tailwind during setup or immediately after scaffold.
+- `npm run dev --workspace web`
+- `npm run build --workspace web`
+- `npm run lint --workspace web`
+
+## Current Scope
+
+- Product landing page for the MVP direction
+- Theme foundation for the future product UI
+- Ready for profile, restaurant, and recommendation routes

@@ -115,18 +115,25 @@ PalatePass combines trust-based discovery, taste matching, and shareability in o
 
 ```text
 PalatePass/
-	apps/
-		web/
-		api/
-	docs/
-	package.json
+  apps/
+    web/
+    api/
+  docs/
+  package.json
 ```
 
 ## Quick Start
 
 1. Install Node.js 20+.
 2. Run `npm install` at the repository root.
-3. Build web and API apps incrementally from the `apps/` folders.
+3. Run `npm run dev` to start the web app and API together.
+
+## Workspace Commands
+
+- `npm run dev`
+- `npm run build`
+- `npm run lint`
+- `npm run check:api`
 
 ## Product Notes
 

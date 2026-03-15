@@ -13,6 +13,7 @@ Thumbs.db
 # Env files
 .env
 .env.*
+!.env.example
 
 # Build and cache
 dist/

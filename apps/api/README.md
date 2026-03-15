@@ -1,10 +1,14 @@
-# API App (Planned)
+# PalatePass API
 
-Planned stack: Node.js + Express + PostgreSQL.
+Express + TypeScript API workspace for authentication, restaurants, ratings, recommendations, and social graph features.
 
-## Suggested bootstrap
+## Commands
 
-1. Initialize package for `apps/api`.
-2. Install: `express`, `cors`, `zod`, `dotenv`.
-3. Add ORM: Prisma (recommended) or Drizzle.
-4. Add initial modules: auth, users, restaurants, ratings, recommendations.
+- `npm run dev --workspace api`
+- `npm run build --workspace api`
+- `npm run check --workspace api`
+
+## Current Endpoints
+
+- `GET /health`
+- `GET /api`
