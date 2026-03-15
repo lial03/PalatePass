@@ -109,11 +109,11 @@ PalatePass solves this by making discovery social, personalized, and shareable.
 - Restaurant model: create, list (with filters + pagination), get by id
 - Ratings: add or update rating per user per restaurant, tag system
 - User profiles: public profile stats, profile update, follow/unfollow APIs
-- Automated tests: 24 passing (auth x6, restaurants x11, users x7)
+- Recommendations: social feed based on followed users' high-rated restaurants
+- Automated tests: 28 passing (auth x6, restaurants x11, users x7, recommendations x4)
 
 ### Up next
 
-- Feed / recommendations (restaurants rated highly by followed users)
 - Web UI for auth and restaurant browsing
 - Affiliate partnerships (delivery and reservations)
 
