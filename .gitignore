@@ -21,3 +21,6 @@ coverage/
 __pycache__/
 *.pyc
 node_modules/
+
+# Local working notes
+palatepass_doc.txt

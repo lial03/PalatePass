@@ -1,0 +1,17 @@
+{
+  "name": "palatepass",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Social restaurant discovery platform",
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace apps/web run dev",
+    "dev:api": "npm --workspace apps/api run dev",
+    "dev": "echo Run dev:web and dev:api in separate terminals",
+    "lint": "echo Add linters once app scaffolds are generated",
+    "test": "echo Add tests once app scaffolds are generated"
+  }
+}
