@@ -6,6 +6,30 @@ Social restaurant discovery based on trusted people and taste matching.
 
 PalatePass helps users discover where to eat through people they trust, shared preferences, and smart recommendations. Instead of anonymous review feeds, the platform is centered on social taste graphs and shareable profiles.
 
+## Problem Statement
+
+Existing restaurant platforms often fail users because:
+
+- Reviews from strangers are hard to trust
+- Recommendations are often irrelevant
+- Personal recommendations are not easy to share
+- It is difficult to discover restaurants through people with similar tastes
+
+PalatePass solves this by making discovery social, personalized, and shareable.
+
+## Target Users
+
+### Primary
+
+- Students and young professionals
+- Food enthusiasts
+- Groups of friends deciding where to eat
+
+### Secondary (Future Phase)
+
+- Restaurants wanting visibility
+- Food bloggers and influencers
+
 ## Platform Roadmap
 
 - Phase 1: Web MVP
@@ -18,6 +42,13 @@ PalatePass helps users discover where to eat through people they trust, shared p
 - Sign up and log in
 - Basic profile with picture and bio
 - Public profiles with ratings and top restaurants
+
+### Public Profile Insights
+
+- Average rating given
+- Favorite cuisines
+- Most visited restaurants
+- Filterable reviews
 
 ### Restaurant Ratings
 
@@ -35,6 +66,7 @@ PalatePass helps users discover where to eat through people they trust, shared p
 
 - QR code for profile
 - QR code for a specific review
+- Curated list QR (future phase)
 
 ## Differentiators
 
@@ -42,12 +74,42 @@ PalatePass helps users discover where to eat through people they trust, shared p
 - Trusted circles (follow friends and aligned reviewers)
 - Social discovery rather than anonymous ratings
 
+## Core Social Features (Post-MVP Wave)
+
+### Lists and Maps
+
+- Users create and share lists (budget meals, date spots, weekend hangouts)
+- Lists can be visualized on a map
+
+### Real-World QR Rating
+
+- Restaurants display in-store QR codes
+- Users can scan and rate instantly from the location
+
 ## Suggested Tech Stack
 
 - Frontend: Next.js (React) + Tailwind CSS
 - Backend: Node.js + Express
 - Database: PostgreSQL (recommended for MVP)
 - Integrations: QR code library, Google Maps API
+
+## Monetization Ideas
+
+- Sponsored restaurant placements, clearly labeled
+- Premium user tier with advanced taste analytics and private lists
+- Restaurant analytics dashboard (rating counts, trend insights, top tags)
+- Affiliate partnerships (delivery and reservations)
+
+## Competitive Advantage
+
+PalatePass combines trust-based discovery, taste matching, and shareability in one experience, rather than relying only on anonymous star ratings.
+
+## Expansion Ideas
+
+- AI-generated taste profile
+- Food event recommendations
+- Group voting for where to eat
+- Influencer-curated restaurant lists
 
 ## Monorepo Structure
 
