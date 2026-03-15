@@ -1,19 +1,9 @@
 import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
-import { z } from "zod";
+import { env } from "./config/env.js";
+import { prisma } from "./lib/prisma.js";
+import { authRouter } from "./routes/auth.js";
 
-dotenv.config();
-
-const envSchema = z.object({
-  PORT: z.coerce.number().int().positive().default(4000),
-  CLIENT_URL: z.string().url().optional(),
-});
-
-const env = envSchema.parse({
-  PORT: process.env.PORT ?? "4000",
-  CLIENT_URL: process.env.CLIENT_URL,
-});
 
 const app = express();
 
@@ -23,6 +13,8 @@ app.use(
   }),
 );
 app.use(express.json());
+
+app.use("/auth", authRouter);
 
 app.get("/health", (_request, response) => {
   response.json({
@@ -47,6 +39,16 @@ app.get("/api", (_request, response) => {
   });
 });
 
-app.listen(env.PORT, () => {
+const server = app.listen(env.PORT, () => {
   console.log(`PalatePass API listening on http://localhost:${env.PORT}`);
+});
+
+process.on("SIGINT", async () => {
+  await prisma.$disconnect();
+  server.close(() => process.exit(0));
+});
+
+process.on("SIGTERM", async () => {
+  await prisma.$disconnect();
+  server.close(() => process.exit(0));
 });

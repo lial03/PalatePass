@@ -8,7 +8,7 @@ on:
 
 jobs:
   quality:
-    name: Lint, Typecheck, Build
+    name: Lint, Test, Typecheck, Build
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -27,6 +27,9 @@ jobs:
 
       - name: Lint web
         run: npm run lint:web
+
+      - name: Test api
+        run: npm --workspace api run test
 
       - name: Typecheck api
         run: npm run check:api
