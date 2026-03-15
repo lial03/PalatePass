@@ -156,13 +156,16 @@ restaurantsRouter.post(
   requireAuth,
   async (request: AuthenticatedRequest, response) => {
     const parsed = createRatingSchema.safeParse(request.body);
+    const restaurantIdParam = Array.isArray(request.params.id)
+      ? request.params.id[0]
+      : request.params.id;
 
     if (!parsed.success) {
       response.status(400).json({ message: "Invalid request body", issues: parsed.error.issues });
       return;
     }
 
-    const restaurant = await prisma.restaurant.findUnique({ where: { id: request.params.id } });
+    const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantIdParam } });
 
     if (!restaurant) {
       response.status(404).json({ message: "Restaurant not found" });
