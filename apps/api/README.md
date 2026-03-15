@@ -63,6 +63,11 @@ Then run migrations:
 - `POST /users/:id/follow` — follow a user (auth required)
 - `DELETE /users/:id/follow` — unfollow a user (auth required)
 
+### Recommendations
+
+- `GET /recommendations/feed` — ranked recommendations from people you follow (auth required)
+- `GET /recommendations/feed?limit=10` — same feed with custom result size
+
 ## Example Request Bodies
 
 `POST /auth/register`
@@ -116,3 +121,9 @@ Then run migrations:
   "avatarUrl": "https://example.com/avatar.jpg"
 }
 ```
+
+`GET /recommendations/feed?limit=10`
+
+Include header:
+
+`Authorization: Bearer <token>`

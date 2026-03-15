@@ -3,6 +3,7 @@ import express from "express";
 import { env } from "./config/env.js";
 import { prisma } from "./lib/prisma.js";
 import { authRouter } from "./routes/auth.js";
+import { recommendationsRouter } from "./routes/recommendations.js";
 import { restaurantsRouter } from "./routes/restaurants.js";
 import { usersRouter } from "./routes/users.js";
 
@@ -17,6 +18,7 @@ app.use(
 app.use(express.json());
 
 app.use("/auth", authRouter);
+app.use("/recommendations", recommendationsRouter);
 app.use("/restaurants", restaurantsRouter);
 app.use("/users", usersRouter);
 
