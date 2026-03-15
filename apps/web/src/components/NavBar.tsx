@@ -42,7 +42,12 @@ export function NavBar() {
 
           {!ready ? null : user ? (
             <>
-              <span className="text-muted">{user.displayName}</span>
+              <Link
+                href={`/users/${user.id}`}
+                className="text-muted transition hover:text-foreground"
+              >
+                {user.displayName}
+              </Link>
               <button
                 onClick={handleLogout}
                 className="rounded-full border border-border px-4 py-1.5 transition hover:bg-white/60"
