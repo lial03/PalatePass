@@ -98,6 +98,23 @@ PalatePass solves this by making discovery social, personalized, and shareable.
 - Sponsored restaurant placements, clearly labeled
 - Premium user tier with advanced taste analytics and private lists
 - Restaurant analytics dashboard (rating counts, trend insights, top tags)
+
+## Implementation Status
+
+### Done
+
+- Monorepo scaffold: Next.js web app + Express API with npm workspaces
+- CI/CD: GitHub Actions (lint, typecheck, tests on every push/PR)
+- Auth: register, login, `/me` — Prisma + Supabase + JWT + bcrypt
+- Restaurant model: create, list (with filters + pagination), get by id
+- Ratings: add or update rating per user per restaurant, tag system
+- Automated tests: 17 passing (auth x6, restaurants x11)
+
+### Up next
+
+- User profiles (public profile page, follow system)
+- Feed / recommendations (restaurants rated highly by followed users)
+- Web UI for auth and restaurant browsing
 - Affiliate partnerships (delivery and reservations)
 
 ## Competitive Advantage

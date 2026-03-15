@@ -38,11 +38,23 @@ Then run migrations:
 
 ## Current Endpoints
 
+### Health
+
 - `GET /health`
 - `GET /api`
+
+### Auth
+
 - `POST /auth/register`
 - `POST /auth/login`
 - `GET /auth/me` (requires `Authorization: Bearer <token>`)
+
+### Restaurants
+
+- `GET /restaurants` — list with optional `?cuisine=`, `?city=`, `?page=`, `?limit=` filters
+- `POST /restaurants` — create (auth required)
+- `GET /restaurants/:id` — single restaurant with ratings
+- `POST /restaurants/:id/ratings` — add or update rating (auth required; one rating per user per restaurant)
 
 ## Example Request Bodies
 
@@ -62,5 +74,28 @@ Then run migrations:
 {
   "email": "testuser@palatepass.com",
   "password": "StrongPass123!"
+}
+```
+
+`POST /restaurants`
+
+```json
+{
+  "name": "Bella Cucina",
+  "address": "12 Olive St",
+  "city": "London",
+  "cuisine": "Italian",
+  "lat": 51.5074,
+  "lng": -0.1278
+}
+```
+
+`POST /restaurants/:id/ratings`
+
+```json
+{
+  "score": 4,
+  "notes": "Great atmosphere and pasta!",
+  "tags": ["cozy", "romantic"]
 }
 ```
