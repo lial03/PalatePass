@@ -132,6 +132,12 @@ Users get a taste compatibility score (example: Taste Match 78%) based on:
 
 PalatePass differentiates with trust-first social discovery, taste matching, and shareable recommendation flows rather than anonymous ratings alone.
 
+## Current MVP Snapshot
+
+- Web app supports registration, login, restaurant browsing, ratings, social recommendations, and public user profiles.
+- Taste Match is implemented as a user-to-user compatibility score based on shared restaurants, cuisines, and tags.
+- Authentication is hardened with httpOnly cookies, JWT expiry handling, and inactivity logout.
+
 ## Expansion Ideas
 
 - AI taste profile

@@ -11,14 +11,15 @@ export function requireAuth(
   response: Response,
   next: NextFunction,
 ): void {
+  const cookies = (request as AuthenticatedRequest & { cookies?: Record<string, string> }).cookies;
+  const cookieToken = cookies?.pp_token;
   const header = request.header("authorization");
+  const token = cookieToken ?? (header?.startsWith("Bearer ") ? header.slice(7).trim() : null);
 
-  if (!header || !header.startsWith("Bearer ")) {
-    response.status(401).json({ message: "Missing or invalid authorization header" });
+  if (!token) {
+    response.status(401).json({ message: "Not authenticated" });
     return;
   }
-
-  const token = header.slice(7).trim();
 
   try {
     const payload = verifyAuthToken(token);

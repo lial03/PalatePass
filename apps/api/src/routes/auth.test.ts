@@ -54,7 +54,7 @@ describe("auth routes", () => {
     expect(response.status).toBe(201);
     expect(response.body.user.email).toBe("testuser@palatepass.com");
     expect(response.body.user.displayName).toBe("Test User");
-    expect(response.body.token).toEqual(expect.any(String));
+    expect(response.body.expiresAt).toEqual(expect.any(Number));
   });
 
   it("blocks duplicate registration", async () => {
@@ -93,7 +93,7 @@ describe("auth routes", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.user.id).toBe("user_123");
-    expect(response.body.token).toEqual(expect.any(String));
+      expect(response.body.expiresAt).toEqual(expect.any(Number));
   });
 
   it("returns 401 for invalid login", async () => {
@@ -134,6 +134,6 @@ describe("auth routes", () => {
     const response = await request(makeTestApp()).get("/auth/me");
 
     expect(response.status).toBe(401);
-    expect(response.body.message).toBe("Missing or invalid authorization header");
+      expect(response.body.message).toBe("Not authenticated");
   });
 });

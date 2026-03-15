@@ -11,6 +11,9 @@ const { mockPrisma } = vi.hoisted(() => ({
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    rating: {
+      findMany: vi.fn(),
+    },
     follow: {
       upsert: vi.fn(),
       deleteMany: vi.fn(),
@@ -37,6 +40,7 @@ describe("users routes", () => {
   beforeEach(() => {
     mockPrisma.user.findUnique.mockReset();
     mockPrisma.user.update.mockReset();
+    mockPrisma.rating.findMany.mockReset();
     mockPrisma.follow.upsert.mockReset();
     mockPrisma.follow.deleteMany.mockReset();
   });
@@ -136,5 +140,82 @@ describe("users routes", () => {
       .send();
 
     expect(res.status).toBe(204);
+  });
+
+  describe("taste-match", () => {
+    it("returns 401 without a token", async () => {
+      const res = await request(makeTestApp()).get("/users/user_2/taste-match");
+      expect(res.status).toBe(401);
+    });
+
+    it("returns 400 when matching with self", async () => {
+      const res = await request(makeTestApp())
+        .get("/users/user_1/taste-match")
+        .set("Authorization", `Bearer ${token}`);
+      expect(res.status).toBe(400);
+    });
+
+    it("returns 404 for unknown user", async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce(null);
+      const res = await request(makeTestApp())
+        .get("/users/unknown/taste-match")
+        .set("Authorization", `Bearer ${token}`);
+      expect(res.status).toBe(404);
+    });
+
+    it("returns 0 when either user has no ratings", async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce({ id: "user_2" });
+      mockPrisma.rating.findMany
+        .mockResolvedValueOnce([]) // my ratings
+        .mockResolvedValueOnce([  // their ratings
+          { restaurantId: "r1", score: 5, tags: [], restaurant: { cuisine: "Italian" } },
+        ]);
+
+      const res = await request(makeTestApp())
+        .get("/users/user_2/taste-match")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.score).toBe(0);
+    });
+
+    it("returns 100 for identical rating profiles", async () => {
+      const ratings = [
+        { restaurantId: "r1", score: 5, tags: [{ name: "cozy" }], restaurant: { cuisine: "Italian" } },
+        { restaurantId: "r2", score: 4, tags: [{ name: "affordable" }], restaurant: { cuisine: "Thai" } },
+      ];
+      mockPrisma.user.findUnique.mockResolvedValueOnce({ id: "user_2" });
+      mockPrisma.rating.findMany
+        .mockResolvedValueOnce(ratings)
+        .mockResolvedValueOnce(ratings);
+
+      const res = await request(makeTestApp())
+        .get("/users/user_2/taste-match")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.score).toBe(100);
+    });
+
+    it("returns a partial score for partial overlap", async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce({ id: "user_2" });
+      mockPrisma.rating.findMany
+        .mockResolvedValueOnce([
+          { restaurantId: "r1", score: 5, tags: [{ name: "cozy" }], restaurant: { cuisine: "Italian" } },
+          { restaurantId: "r2", score: 2, tags: [], restaurant: { cuisine: "Thai" } },
+        ])
+        .mockResolvedValueOnce([
+          { restaurantId: "r1", score: 3, tags: [{ name: "cozy" }], restaurant: { cuisine: "Italian" } },
+          { restaurantId: "r3", score: 5, tags: [], restaurant: { cuisine: "Mexican" } },
+        ]);
+
+      const res = await request(makeTestApp())
+        .get("/users/user_2/taste-match")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.score).toBeGreaterThan(0);
+      expect(res.body.score).toBeLessThan(100);
+    });
   });
 });

@@ -20,8 +20,8 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const { token, user } = await api.auth.login({ email, password });
-      login(token, user);
+      const { user, expiresAt } = await api.auth.login({ email, password });
+      login(user, expiresAt);
       router.push("/feed");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");

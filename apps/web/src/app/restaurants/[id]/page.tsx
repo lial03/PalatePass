@@ -52,11 +52,9 @@ function RatingCard({ rating }: { rating: RatingSummary }) {
 
 function RateForm({
   restaurantId,
-  token,
   onSuccess,
 }: {
   restaurantId: string;
-  token: string;
   onSuccess: () => void;
 }) {
   const [score, setScore] = useState(5);
@@ -70,18 +68,14 @@ function RateForm({
     setLoading(true);
     setError(null);
     try {
-      await api.restaurants.rate(
-        restaurantId,
-        {
-          score,
-          notes: notes || undefined,
-          tags: tags
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean),
-        },
-        token,
-      );
+      await api.restaurants.rate(restaurantId, {
+        score,
+        notes: notes || undefined,
+        tags: tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+      });
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit rating");
@@ -137,7 +131,7 @@ function RateForm({
 export default function RestaurantDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
-  const { token, ready } = useAuth();
+  const { user, ready } = useAuth();
   const router = useRouter();
 
   const [restaurant, setRestaurant] = useState<RestaurantDetail | null>(null);
@@ -230,7 +224,7 @@ export default function RestaurantDetailPage() {
         <div className="flex items-center justify-between">
           <h2 className="font-serif text-2xl">Ratings</h2>
           {ready &&
-            (token ? (
+            (user ? (
               <button
                 onClick={() => setShowForm((v) => !v)}
                 className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent-strong"
@@ -247,10 +241,9 @@ export default function RestaurantDetailPage() {
             ))}
         </div>
 
-        {showForm && token && (
+        {showForm && user && (
           <RateForm
             restaurantId={id}
-            token={token}
             onSuccess={() => {
               setShowForm(false);
               void load();
