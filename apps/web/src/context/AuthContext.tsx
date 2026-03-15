@@ -9,18 +9,17 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { ApiUser } from "../lib/api";
+import { api, type ApiUser } from "../lib/api";
 
-type AuthState = { token: string | null; user: ApiUser | null };
+type AuthState = { user: ApiUser | null };
 
 type AuthContextType = AuthState & {
-  login: (token: string, user: ApiUser) => void;
+  login: (user: ApiUser, expiresAt: number) => void;
   logout: () => void;
   ready: boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
-  token: null,
   user: null,
   login: () => {},
   logout: () => {},
@@ -31,18 +30,8 @@ const STORAGE_KEY = "pp_auth";
 /** Log out after 15 minutes of inactivity. */
 const INACTIVITY_MS = 15 * 60 * 1000;
 
-/** Decode the JWT payload and return the expiry as a ms timestamp, or null. */
-function getTokenExpiry(token: string): number | null {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1])) as { exp?: number };
-    return typeof payload.exp === "number" ? payload.exp * 1000 : null;
-  } catch {
-    return null;
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>({ token: null, user: null });
+  const [state, setState] = useState<AuthState>({ user: null });
   const [ready, setReady] = useState(false);
   const expiryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inactivityTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -60,8 +49,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     clearTimers();
-    setState({ token: null, user: null });
+    setState({ user: null });
     localStorage.removeItem(STORAGE_KEY);
+    api.auth.logout().catch(() => {});
   }, [clearTimers]);
 
   const resetInactivityTimer = useCallback(() => {
@@ -74,19 +64,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Returns false if the token is already expired (caller should not store it).
    */
   const startTimers = useCallback(
-    (token: string): boolean => {
+    (expiresAt: number): boolean => {
       clearTimers();
 
-      const expiry = getTokenExpiry(token);
-      if (expiry !== null) {
-        const ms = expiry - Date.now();
-        if (ms <= 0) {
-          logout();
-          return false;
-        }
-        expiryTimer.current = setTimeout(logout, ms);
+      const ms = expiresAt - Date.now();
+      if (ms <= 0) {
+        logout();
+        return false;
       }
-
+      expiryTimer.current = setTimeout(logout, ms);
       inactivityTimer.current = setTimeout(logout, INACTIVITY_MS);
       return true;
     },
@@ -95,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Reset inactivity timer on any user interaction while logged in.
   useEffect(() => {
-    if (!state.token) return;
+    if (!state.user) return;
     const events = [
       "mousemove",
       "keydown",
@@ -108,17 +94,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.addEventListener(e, handler, { passive: true }),
     );
     return () => events.forEach((e) => window.removeEventListener(e, handler));
-  }, [state.token, resetInactivityTimer]);
+  }, [state.user, resetInactivityTimer]);
 
   // Hydrate from localStorage, discarding tokens that are already expired.
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as AuthState;
-        if (parsed.token && parsed.user) {
-          const valid = startTimers(parsed.token);
-          if (valid) setState(parsed);
+        const parsed = JSON.parse(raw) as { user: ApiUser; expiresAt: number };
+        if (parsed.user && parsed.expiresAt) {
+          const valid = startTimers(parsed.expiresAt);
+          if (valid) setState({ user: parsed.user });
           else localStorage.removeItem(STORAGE_KEY);
         }
       }
@@ -130,12 +116,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [startTimers]);
 
   const login = useCallback(
-    (token: string, user: ApiUser) => {
-      const valid = startTimers(token);
+    (user: ApiUser, expiresAt: number) => {
+      const valid = startTimers(expiresAt);
       if (!valid) return;
-      const next = { token, user };
-      setState(next);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      setState({ user });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, expiresAt }));
     },
     [startTimers],
   );

@@ -21,12 +21,12 @@ export default function RegisterPage() {
     setError(null);
     setLoading(true);
     try {
-      const { token, user } = await api.auth.register({
+      const { user, expiresAt } = await api.auth.register({
         email,
         password,
         displayName,
       });
-      login(token, user);
+      login(user, expiresAt);
       router.push("/feed");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");

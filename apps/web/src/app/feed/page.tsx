@@ -56,7 +56,7 @@ function RecommendationCard({ rec }: { rec: Recommendation }) {
 }
 
 export default function FeedPage() {
-  const { token, user, ready } = useAuth();
+  const { user, ready } = useAuth();
   const router = useRouter();
   const [recs, setRecs] = useState<Recommendation[]>([]);
   const [meta, setMeta] = useState<{
@@ -69,13 +69,13 @@ export default function FeedPage() {
 
   useEffect(() => {
     if (!ready) return;
-    if (!token) {
+    if (!user) {
       router.replace("/login");
       return;
     }
 
     api.recommendations
-      .feed(token)
+      .feed()
       .then((res) => {
         setRecs(res.data);
         setMeta(res.meta);
@@ -84,9 +84,9 @@ export default function FeedPage() {
         setError(err instanceof Error ? err.message : "Failed to load feed");
       })
       .finally(() => setLoading(false));
-  }, [token, ready, router]);
+  }, [user, ready, router]);
 
-  if (!ready || (ready && !token)) return null;
+  if (!ready || (ready && !user)) return null;
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10 sm:px-10">

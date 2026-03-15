@@ -9,7 +9,7 @@ export type ApiUser = {
 };
 
 export type AuthResponse = {
-  token: string;
+  expiresAt: number;
   user: ApiUser;
 };
 
@@ -76,6 +76,7 @@ async function apiFetch<T>(
   const { token, ...rest } = options;
   const res = await fetch(`${API_BASE}${path}`, {
     ...rest,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -85,6 +86,7 @@ async function apiFetch<T>(
     const err = await res.json().catch(() => ({ message: res.statusText }));
     throw new Error((err as { message?: string }).message ?? res.statusText);
   }
+  if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }
 
@@ -100,7 +102,8 @@ export const api = {
         method: "POST",
         body: JSON.stringify(body),
       }),
-    me: (token: string) => apiFetch<{ user: ApiUser }>("/auth/me", { token }),
+    me: () => apiFetch<{ user: ApiUser }>("/auth/me"),
+    logout: () => apiFetch<{ ok: boolean }>("/auth/logout", { method: "POST" }),
   },
   restaurants: {
     list: (params?: {
@@ -129,41 +132,31 @@ export const api = {
     rate: (
       id: string,
       body: { score: number; notes?: string; tags?: string[] },
-      token: string,
     ) =>
       apiFetch<{ rating: RatingSummary }>(`/restaurants/${id}/ratings`, {
         method: "POST",
         body: JSON.stringify(body),
-        token,
       }),
   },
   recommendations: {
-    feed: (token: string, limit = 20) =>
+    feed: (limit = 20) =>
       apiFetch<{
         data: Recommendation[];
         meta: { followingCount: number; candidateRatings: number; limit: number };
-      }>(`/recommendations/feed?limit=${limit}`, { token }),
+      }>(`/recommendations/feed?limit=${limit}`),
   },
   users: {
     profile: (id: string) => apiFetch<{ profile: UserProfile }>(`/users/${id}`),
-    updateMe: (
-      body: { displayName?: string; bio?: string; avatarUrl?: string },
-      token: string,
-    ) =>
+    updateMe: (body: { displayName?: string; bio?: string; avatarUrl?: string }) =>
       apiFetch<{ user: ApiUser }>("/users/me", {
         method: "PATCH",
         body: JSON.stringify(body),
-        token,
       }),
-    follow: (id: string, token: string) =>
-      apiFetch<{ message: string }>(`/users/${id}/follow`, {
-        method: "POST",
-        token,
-      }),
-    unfollow: (id: string, token: string) =>
-      apiFetch<void>(`/users/${id}/follow`, {
-        method: "DELETE",
-        token,
-      }),
+    follow: (id: string) =>
+      apiFetch<{ message: string }>(`/users/${id}/follow`, { method: "POST" }),
+    unfollow: (id: string) =>
+      apiFetch<void>(`/users/${id}/follow`, { method: "DELETE" }),
+    tasteMatch: (id: string) =>
+      apiFetch<{ score: number }>(`/users/${id}/taste-match`),
   },
 };

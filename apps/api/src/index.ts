@@ -1,3 +1,4 @@
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import { env } from "./config/env.js";
@@ -13,9 +14,11 @@ const app = express();
 app.use(
   cors({
     origin: env.CLIENT_URL ?? true,
+    credentials: true,
   }),
 );
-app.use(express.json());
+app.use(express.json({ limit: "16kb" }));
+app.use(cookieParser());
 
 app.use("/auth", authRouter);
 app.use("/recommendations", recommendationsRouter);

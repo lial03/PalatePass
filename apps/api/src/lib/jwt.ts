@@ -27,3 +27,8 @@ export function verifyAuthToken(token: string): AuthTokenPayload {
     email: decoded.email,
   };
 }
+
+export function getTokenExpiresAt(token: string): number {
+  const decoded = jwt.decode(token) as jwt.JwtPayload | null;
+  return (decoded?.exp ?? 0) * 1000;
+}

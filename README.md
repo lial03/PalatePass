@@ -105,19 +105,20 @@ PalatePass solves this by making discovery social, personalized, and shareable.
 
 - Monorepo scaffold: Next.js web app + Express API with npm workspaces
 - CI/CD: GitHub Actions (lint, typecheck, tests on every push/PR)
-- Auth: register, login, `/me` — Prisma + Supabase + JWT + bcrypt
+- Auth: register, login, `/me`, logout — Prisma + Supabase + JWT + bcrypt
 - Restaurant model: create, list (with filters + pagination), get by id
 - Ratings: add or update rating per user per restaurant, tag system
 - User profiles: public profile stats, profile update, follow/unfollow APIs
 - Recommendations: social feed based on followed users' high-rated restaurants
-- Automated tests: 28 passing (auth x6, restaurants x11, users x7, recommendations x4)
+- Automated tests: 34 passing (auth x6, restaurants x11, users x13, recommendations x4)
 - Web UI: login, register, restaurant browse + detail + inline rating, social feed
-- Session security: JWT expiry detection + 15-min inactivity auto-logout
+- Session security: httpOnly auth cookie, JWT expiry detection, 15-min inactivity auto-logout
 - User profile page: public stats, favorite cuisines, follow/unfollow, own-profile detection
+- Taste Match: compatibility score between users based on shared restaurants, cuisines, and tags
+- API hardening: cookie-based auth with CORS credentials and 16kb JSON body limit
 
 ### Up next
 
-- Taste Match score between users
 - QR code sharing for profiles and reviews
 - Affiliate partnerships (delivery and reservations)
 
@@ -148,6 +149,13 @@ PalatePass/
 1. Install Node.js 20+.
 2. Run `npm install` at the repository root.
 3. Run `npm run dev` to start the web app and API together.
+
+## Auth And Security Notes
+
+- The API now stores auth in an httpOnly `pp_token` cookie instead of exposing JWTs to the browser runtime.
+- The web app sends authenticated requests with `credentials: include`.
+- API JSON request bodies are capped at `16kb`.
+- Cross-origin auth requires `CLIENT_URL` to match the web app origin.
 
 ## Workspace Commands
 

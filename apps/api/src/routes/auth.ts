@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { Router } from "express";
 import { z } from "zod";
-import { signAuthToken } from "../lib/jwt.js";
+import { getTokenExpiresAt, signAuthToken } from "../lib/jwt.js";
 import { prisma } from "../lib/prisma.js";
 import {
     requireAuth,
@@ -50,9 +50,17 @@ authRouter.post("/register", async (request, response) => {
   });
 
   const token = signAuthToken({ sub: user.id, email: user.email });
+  const expiresAt = getTokenExpiresAt(token);
+
+  response.cookie("pp_token", token, {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: expiresAt - Date.now(),
+  });
 
   response.status(201).json({
-    token,
+    expiresAt,
     user: {
       id: user.id,
       email: user.email,
@@ -86,9 +94,17 @@ authRouter.post("/login", async (request, response) => {
   }
 
   const token = signAuthToken({ sub: user.id, email: user.email });
+  const expiresAt = getTokenExpiresAt(token);
+
+  response.cookie("pp_token", token, {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: expiresAt - Date.now(),
+  });
 
   response.json({
-    token,
+    expiresAt,
     user: {
       id: user.id,
       email: user.email,
@@ -123,6 +139,15 @@ authRouter.get("/me", requireAuth, async (request, response) => {
   }
 
   response.json({ user });
+});
+
+authRouter.post("/logout", (_request, response) => {
+  response.clearCookie("pp_token", {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+  });
+  response.json({ ok: true });
 });
 
 export { authRouter };

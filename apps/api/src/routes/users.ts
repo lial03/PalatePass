@@ -164,5 +164,81 @@ usersRouter.delete("/:id/follow", requireAuth, async (request: AuthenticatedRequ
   response.status(204).send();
 });
 
+usersRouter.get("/:id/taste-match", requireAuth, async (request: AuthenticatedRequest, response) => {
+  const meId = request.authUser!.id;
+  const otherId = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id;
+
+  if (meId === otherId) {
+    response.status(400).json({ message: "Cannot compute taste match with yourself" });
+    return;
+  }
+
+  const otherUser = await prisma.user.findUnique({ where: { id: otherId }, select: { id: true } });
+  if (!otherUser) {
+    response.status(404).json({ message: "User not found" });
+    return;
+  }
+
+  const [myRatings, theirRatings] = await Promise.all([
+    prisma.rating.findMany({
+      where: { userId: meId },
+      select: {
+        restaurantId: true,
+        score: true,
+        tags: { select: { name: true } },
+        restaurant: { select: { cuisine: true } },
+      },
+    }),
+    prisma.rating.findMany({
+      where: { userId: otherId },
+      select: {
+        restaurantId: true,
+        score: true,
+        tags: { select: { name: true } },
+        restaurant: { select: { cuisine: true } },
+      },
+    }),
+  ]);
+
+  type RatingRow = (typeof myRatings)[number];
+
+  if (myRatings.length === 0 || theirRatings.length === 0) {
+    response.json({ score: 0 });
+    return;
+  }
+
+  // 1. Restaurant similarity (40%): rating closeness × overlap ratio
+  const myMap = new Map<string, number>(myRatings.map((r: RatingRow) => [r.restaurantId, r.score]));
+  const theirMap = new Map<string, number>(theirRatings.map((r: RatingRow) => [r.restaurantId, r.score]));
+  const commonIds = [...myMap.keys()].filter((id) => theirMap.has(id));
+  const totalUnique = new Set([...myMap.keys(), ...theirMap.keys()]).size;
+
+  let restaurantScore = 0;
+  if (commonIds.length > 0) {
+    const avgSimilarity =
+      commonIds.reduce((sum: number, id) => sum + 1 - Math.abs(myMap.get(id)! - theirMap.get(id)!) / 4, 0) /
+      commonIds.length;
+    restaurantScore = avgSimilarity * (commonIds.length / totalUnique);
+  }
+
+  // 2. Cuisine overlap (35%): Jaccard similarity
+  const myCuisines = new Set(myRatings.map((r: RatingRow) => r.restaurant.cuisine));
+  const theirCuisines = new Set(theirRatings.map((r: RatingRow) => r.restaurant.cuisine));
+  const cuisineIntersection = [...myCuisines].filter((c) => theirCuisines.has(c)).length;
+  const cuisineUnion = new Set([...myCuisines, ...theirCuisines]).size;
+  const cuisineScore = cuisineUnion > 0 ? cuisineIntersection / cuisineUnion : 0;
+
+  // 3. Tag overlap (25%): Jaccard similarity
+  const myTags = new Set(myRatings.flatMap((r: RatingRow) => r.tags.map((t: { name: string }) => t.name)));
+  const theirTags = new Set(theirRatings.flatMap((r: RatingRow) => r.tags.map((t: { name: string }) => t.name)));
+  const tagUnion = new Set([...myTags, ...theirTags]).size;
+  const tagScore =
+    tagUnion > 0 ? [...myTags].filter((t) => theirTags.has(t)).length / tagUnion : 0;
+
+  const score = Math.round((restaurantScore * 0.4 + cuisineScore * 0.35 + tagScore * 0.25) * 100);
+
+  response.json({ score });
+});
+
 export { usersRouter };
 

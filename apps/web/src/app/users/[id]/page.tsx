@@ -21,13 +21,14 @@ export default function UserProfilePage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
   const router = useRouter();
-  const { ready, token, user } = useAuth();
+  const { ready, user } = useAuth();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followPending, setFollowPending] = useState(false);
+  const [tasteMatch, setTasteMatch] = useState<number | null>(null);
 
   const isOwnProfile = Boolean(user && user.id === id);
 
@@ -44,16 +45,24 @@ export default function UserProfilePage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  useEffect(() => {
+    if (!ready || !user || isOwnProfile) return;
+    api.users
+      .tasteMatch(id)
+      .then((res) => setTasteMatch(res.score))
+      .catch(() => setTasteMatch(null));
+  }, [ready, user, isOwnProfile, id]);
+
   async function handleFollow() {
-    if (!token || !profile || followPending) {
-      if (!token) router.push("/login");
+    if (!user || !profile || followPending) {
+      if (!user) router.push("/login");
       return;
     }
 
     setFollowPending(true);
     try {
       if (isFollowing) {
-        await api.users.unfollow(profile.id, token);
+        await api.users.unfollow(profile.id);
         setIsFollowing(false);
         setProfile((prev) =>
           prev
@@ -67,7 +76,7 @@ export default function UserProfilePage() {
             : prev,
         );
       } else {
-        await api.users.follow(profile.id, token);
+        await api.users.follow(profile.id);
         setIsFollowing(true);
         setProfile((prev) =>
           prev
@@ -142,21 +151,28 @@ export default function UserProfilePage() {
               View your feed
             </button>
           ) : (
-            <button
-              onClick={handleFollow}
-              disabled={followPending}
-              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
-                isFollowing
-                  ? "border border-border bg-white/70 hover:bg-white"
-                  : "bg-accent text-white hover:bg-accent-strong"
-              } disabled:opacity-60`}
-            >
-              {followPending
-                ? "Updating..."
-                : isFollowing
-                  ? "Following"
-                  : "Follow"}
-            </button>
+            <div className="flex flex-col items-end gap-2">
+              {tasteMatch !== null && (
+                <span className="rounded-full border border-accent/30 bg-accent/10 px-4 py-1 text-xs font-semibold text-accent">
+                  Taste Match {tasteMatch}%
+                </span>
+              )}
+              <button
+                onClick={handleFollow}
+                disabled={followPending}
+                className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
+                  isFollowing
+                    ? "border border-border bg-white/70 hover:bg-white"
+                    : "bg-accent text-white hover:bg-accent-strong"
+                } disabled:opacity-60`}
+              >
+                {followPending
+                  ? "Updating..."
+                  : isFollowing
+                    ? "Following"
+                    : "Follow"}
+              </button>
+            </div>
           )}
         </div>
 
