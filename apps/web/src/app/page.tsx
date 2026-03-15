@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const pillars = [
   {
     title: "Trusted people over strangers",
@@ -40,18 +42,18 @@ export default function Home() {
             people instead of anonymous review piles.
           </p>
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-            <a
+            <Link
               className="rounded-full bg-accent px-6 py-3 text-center font-semibold text-white transition hover:bg-accent-strong"
               href="/restaurants"
             >
               Browse restaurants
-            </a>
-            <a
+            </Link>
+            <Link
               className="rounded-full border border-border px-6 py-3 text-center font-semibold transition hover:bg-white/60"
               href="/register"
             >
               Create account
-            </a>
+            </Link>
           </div>
         </div>
 
