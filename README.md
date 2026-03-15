@@ -135,6 +135,15 @@ PalatePass/
 - `npm run lint`
 - `npm run check:api`
 
+## CI/CD
+
+GitHub Actions workflows are configured in `.github/workflows`:
+
+- CI (`ci.yml`): runs on pushes and PRs for `main` and `develop`, and executes lint, API typecheck, and build.
+- CD (`cd.yml`): runs on pushes to `main` and packages release artifacts only (no auto-deploy yet).
+
+When you choose a hosting target later (for example Vercel, Render, Railway, Fly.io, or AWS), we can add a deployment job and the required repository secrets.
+
 ## Product Notes
 
 Detailed planning extracted from the project brief is in `docs/product-brief.md`.
