@@ -4,15 +4,35 @@
 
 Build a social restaurant-rating platform where people discover restaurants through trusted people, shared tastes, and smart recommendations.
 
-## Problem
+Unlike traditional review apps, PalatePass emphasizes:
 
-Traditional review platforms rely heavily on anonymous ratings, creating trust and relevance issues.
+- Taste matching between users
+- Recommendations based on real people, not anonymous reviews
+- Easy profile and review sharing through QR codes
+
+## Problem Statement
+
+Existing restaurant review platforms have key challenges:
+
+- Reviews from strangers are hard to trust
+- Recommendations are often irrelevant
+- Sharing personal recommendations is difficult
+- Discovering restaurants through similar tastes is limited
+
+PalatePass addresses this by making discovery social, personalized, and shareable.
 
 ## Target Users
+
+### Primary Users
 
 - Students and young professionals
 - Food enthusiasts
 - Friend groups deciding where to eat
+
+### Secondary Users (Future Phase)
+
+- Restaurants wanting visibility
+- Food bloggers and influencers
 
 ## MVP Features
 
@@ -26,12 +46,16 @@ Traditional review platforms rely heavily on anonymous ratings, creating trust a
 - 1-5 star rating
 - Short text reviews
 - Tags (cozy, spicy, affordable, fast service)
+- Average restaurant rating visibility
 
 ### Public Profiles
 
 - View ratings by user
 - Top restaurants
-- Basic filtering
+- Filter reviews
+- Average rating given
+- Favorite cuisines
+- Most visited restaurants
 
 ### Recommendations
 
@@ -43,12 +67,33 @@ Traditional review platforms rely heavily on anonymous ratings, creating trust a
 
 - Profile QR
 - Review QR
+- Curated list QR (future phase)
 
-## Unique Value
+## Unique Features
 
-- Taste Match score
-- Trusted circles through follows
-- Social-first restaurant discovery
+### Taste Matching
+
+Users get a taste compatibility score (example: Taste Match 78%) based on:
+
+- Common highly rated restaurants
+- Shared cuisines
+- Similar tag usage
+
+### Trusted Circles
+
+- Follow friends
+- Follow reviewers with similar taste
+- See recommendation feeds from trusted people
+
+### Lists and Maps
+
+- Create lists like budget meals, date spots, and weekend hangouts
+- Share lists
+- Display lists on maps
+
+### Real-World QR Rating
+
+- Restaurants can display QR codes for instant on-site ratings
 
 ## Suggested MVP Architecture
 
@@ -57,11 +102,39 @@ Traditional review platforms rely heavily on anonymous ratings, creating trust a
 - Database: PostgreSQL
 - Services: QR generation, map integration
 
-## Future Enhancements
+## Monetization Strategy (Brainstormed)
 
-- Lists and maps
-- In-restaurant QR instant rating
-- Premium user features
-- Sponsored placements with explicit labels
-- Restaurant analytics dashboard
-- Affiliate deals
+### Sponsored Restaurants
+
+- Paid featured placements in discovery/search
+- Must be clearly labeled as sponsored
+
+### Premium User Features
+
+- Advanced taste analytics and trends
+- Private lists
+- Deeper recommendations
+- Profile customization and badges
+
+### Restaurant Analytics Dashboard
+
+- Monthly subscription for trend insights
+- Rating volume and feedback trends
+- Popular tag analytics
+
+### Affiliate Deals
+
+- Delivery platform partnerships
+- Reservation platform partnerships
+- Commission per booking/order
+
+## Competitive Advantage
+
+PalatePass differentiates with trust-first social discovery, taste matching, and shareable recommendation flows rather than anonymous ratings alone.
+
+## Expansion Ideas
+
+- AI taste profile
+- Food event recommendations
+- Group planning and voting
+- Influencer restaurant lists
