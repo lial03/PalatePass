@@ -1,0 +1,275 @@
+"use client";
+
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useAuth } from "../../../context/AuthContext";
+import {
+  api,
+  type RatingSummary,
+  type RestaurantDetail,
+} from "../../../lib/api";
+
+function Stars({ score }: { score: number }) {
+  return (
+    <span className="text-accent">
+      {"★".repeat(score)}
+      <span className="text-muted/40">{"★".repeat(5 - score)}</span>
+    </span>
+  );
+}
+
+function RatingCard({ rating }: { rating: RatingSummary }) {
+  return (
+    <div className="rounded-3xl border border-border bg-white/70 p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold">{rating.displayName}</p>
+          <Stars score={rating.score} />
+        </div>
+        <p className="text-xs text-muted">
+          {new Date(rating.createdAt).toLocaleDateString()}
+        </p>
+      </div>
+      {rating.notes && (
+        <p className="mt-3 text-sm leading-7 text-muted">{rating.notes}</p>
+      )}
+      {rating.tags.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {rating.tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full border border-border bg-surface px-3 py-0.5 text-xs text-muted"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RateForm({
+  restaurantId,
+  token,
+  onSuccess,
+}: {
+  restaurantId: string;
+  token: string;
+  onSuccess: () => void;
+}) {
+  const [score, setScore] = useState(5);
+  const [notes, setNotes] = useState("");
+  const [tags, setTags] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      await api.restaurants.rate(
+        restaurantId,
+        {
+          score,
+          notes: notes || undefined,
+          tags: tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean),
+        },
+        token,
+      );
+      onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to submit rating");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="mt-6 rounded-3xl border border-border bg-surface p-5"
+    >
+      <h3 className="font-semibold">Leave a rating</h3>
+      <div className="mt-4 flex gap-2">
+        {[1, 2, 3, 4, 5].map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => setScore(s)}
+            className={`text-2xl transition ${s <= score ? "text-accent" : "text-muted/30"}`}
+          >
+            ★
+          </button>
+        ))}
+      </div>
+      <textarea
+        placeholder="Notes (optional)"
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        rows={3}
+        className="mt-3 w-full rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
+      />
+      <input
+        type="text"
+        placeholder="Tags, comma-separated (cozy, spicy, affordable)"
+        value={tags}
+        onChange={(e) => setTags(e.target.value)}
+        className="mt-2 w-full rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
+      />
+      {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+      <button
+        type="submit"
+        disabled={loading}
+        className="mt-3 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-accent-strong disabled:opacity-60"
+      >
+        {loading ? "Submitting…" : "Submit rating"}
+      </button>
+    </form>
+  );
+}
+
+export default function RestaurantDetailPage() {
+  const params = useParams<{ id: string }>();
+  const id = params.id;
+  const { token, ready } = useAuth();
+  const router = useRouter();
+
+  const [restaurant, setRestaurant] = useState<RestaurantDetail | null>(null);
+  const [ratings, setRatings] = useState<RatingSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const res = await api.restaurants.get(id);
+      setRestaurant(res.restaurant);
+      setRatings(res.ratings);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Restaurant not found");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void load();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <main className="mx-auto max-w-3xl px-6 py-10">
+        <div className="h-48 animate-pulse rounded-4xl border border-border bg-surface-strong" />
+      </main>
+    );
+  }
+
+  if (error || !restaurant) {
+    return (
+      <main className="mx-auto max-w-3xl px-6 py-10 text-center">
+        <p className="font-serif text-2xl text-muted">{error ?? "Not found"}</p>
+        <Link
+          href="/restaurants"
+          className="mt-4 inline-block text-sm text-accent hover:underline"
+        >
+          ← Back to restaurants
+        </Link>
+      </main>
+    );
+  }
+
+  const avg =
+    ratings.length > 0
+      ? ratings.reduce((s, r) => s + r.score, 0) / ratings.length
+      : null;
+
+  return (
+    <main className="mx-auto max-w-3xl px-6 py-10 sm:px-10">
+      <Link
+        href="/restaurants"
+        className="mb-6 inline-block text-sm text-muted transition hover:text-foreground"
+      >
+        ← Restaurants
+      </Link>
+
+      <div className="rounded-4xl border border-border bg-surface p-8 shadow-[0_20px_60px_rgba(70,32,13,0.07)]">
+        <span className="rounded-full border border-border bg-white/80 px-3 py-0.5 text-xs font-medium text-muted">
+          {restaurant.cuisine}
+        </span>
+        <h1 className="mt-3 font-serif text-4xl">{restaurant.name}</h1>
+        <p className="mt-1 text-sm text-muted">
+          {restaurant.address}, {restaurant.city}
+        </p>
+
+        <div className="mt-4 flex items-center gap-4">
+          {avg !== null && (
+            <span className="text-lg text-accent">
+              {"★".repeat(Math.round(avg))}
+              <span className="text-muted/40">
+                {"★".repeat(5 - Math.round(avg))}
+              </span>
+              <span className="ml-2 text-sm font-semibold text-foreground">
+                {avg.toFixed(1)}
+              </span>
+            </span>
+          )}
+          <span className="text-sm text-muted">
+            {ratings.length} {ratings.length === 1 ? "rating" : "ratings"}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <div className="flex items-center justify-between">
+          <h2 className="font-serif text-2xl">Ratings</h2>
+          {ready &&
+            (token ? (
+              <button
+                onClick={() => setShowForm((v) => !v)}
+                className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent-strong"
+              >
+                {showForm ? "Cancel" : "Rate this place"}
+              </button>
+            ) : (
+              <button
+                onClick={() => router.push("/login")}
+                className="rounded-full border border-border px-4 py-2 text-sm transition hover:bg-white/60"
+              >
+                Log in to rate
+              </button>
+            ))}
+        </div>
+
+        {showForm && token && (
+          <RateForm
+            restaurantId={id}
+            token={token}
+            onSuccess={() => {
+              setShowForm(false);
+              void load();
+            }}
+          />
+        )}
+
+        {ratings.length === 0 ? (
+          <p className="mt-6 text-sm text-muted">
+            No ratings yet. Be the first!
+          </p>
+        ) : (
+          <div className="mt-4 flex flex-col gap-3">
+            {ratings.map((r) => (
+              <RatingCard key={r.id} rating={r} />
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}

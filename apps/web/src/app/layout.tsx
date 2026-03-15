@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Newsreader, Sora } from "next/font/google";
+import { NavBar } from "../components/NavBar";
 import "./globals.css";
+import { Providers } from "./providers";
 
 const sora = Sora({
   variable: "--font-sora",
@@ -26,7 +28,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${sora.variable} ${newsreader.variable} antialiased`}>
-        {children}
+        <Providers>
+          <NavBar />
+          {children}
+        </Providers>
       </body>
     </html>
   );
