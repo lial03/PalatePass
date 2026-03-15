@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const pillars = [
   {
     title: "Trusted people over strangers",
@@ -26,7 +28,7 @@ export default function Home() {
       <section className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
         <div className="rounded-4xl border border-border bg-surface px-6 py-8 shadow-[0_25px_80px_rgba(70,32,13,0.08)] sm:px-10 sm:py-12">
           <div className="mb-8 inline-flex rounded-full border border-border bg-white/70 px-4 py-2 text-sm text-muted backdrop-blur">
-            Web MVP scaffold is live on feature/project-scaffold
+            Auth · Restaurants · Profiles · Feed — API complete
           </div>
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.28em] text-accent-strong">
             PalatePass
@@ -40,18 +42,18 @@ export default function Home() {
             people instead of anonymous review piles.
           </p>
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-            <a
+            <Link
               className="rounded-full bg-accent px-6 py-3 text-center font-semibold text-white transition hover:bg-accent-strong"
-              href="#roadmap"
+              href="/restaurants"
             >
-              See MVP scope
-            </a>
-            <a
+              Browse restaurants
+            </Link>
+            <Link
               className="rounded-full border border-border px-6 py-3 text-center font-semibold transition hover:bg-white/60"
-              href="http://localhost:4000/api"
+              href="/register"
             >
-              View API contract
-            </a>
+              Create account
+            </Link>
           </div>
         </div>
 
