@@ -3,6 +3,7 @@ import express from "express";
 import { env } from "./config/env.js";
 import { prisma } from "./lib/prisma.js";
 import { authRouter } from "./routes/auth.js";
+import { restaurantsRouter } from "./routes/restaurants.js";
 
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(
 app.use(express.json());
 
 app.use("/auth", authRouter);
+app.use("/restaurants", restaurantsRouter);
 
 app.get("/health", (_request, response) => {
   response.json({
