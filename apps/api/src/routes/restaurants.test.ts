@@ -101,6 +101,27 @@ describe("restaurants routes", () => {
     expect(res.body.total).toBe(0);
   });
 
+  it("applies query and country filters", async () => {
+    mockPrisma.restaurant.count.mockResolvedValueOnce(0);
+    mockPrisma.restaurant.findMany.mockResolvedValueOnce([]);
+
+    const res = await request(makeTestApp())
+      .get("/restaurants")
+      .query({ query: "Bella", countryCode: "gb", limit: 5 });
+
+    expect(res.status).toBe(200);
+    expect(mockPrisma.restaurant.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          countryCode: { equals: "GB" },
+          OR: expect.arrayContaining([
+            { name: { contains: "Bella", mode: "insensitive" } },
+          ]),
+        }),
+      }),
+    );
+  });
+
   // --- POST /restaurants ---
 
   it("creates a restaurant when authenticated", async () => {
