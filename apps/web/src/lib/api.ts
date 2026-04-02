@@ -131,12 +131,16 @@ export const api = {
     list: (params?: {
       cuisine?: string;
       city?: string;
+      query?: string;
+      countryCode?: string;
       page?: number;
       limit?: number;
     }) => {
       const qs = new URLSearchParams();
       if (params?.cuisine) qs.set("cuisine", params.cuisine);
       if (params?.city) qs.set("city", params.city);
+      if (params?.query) qs.set("query", params.query);
+      if (params?.countryCode) qs.set("countryCode", params.countryCode);
       if (params?.page) qs.set("page", String(params.page));
       if (params?.limit) qs.set("limit", String(params.limit));
       const query = qs.toString();

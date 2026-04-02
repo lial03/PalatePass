@@ -59,6 +59,10 @@ const createRatingSchema = z.object({
 restaurantsRouter.get("/", async (request, response) => {
   const cuisine = typeof request.query.cuisine === "string" ? request.query.cuisine : undefined;
   const city = typeof request.query.city === "string" ? request.query.city : undefined;
+  const query = typeof request.query.query === "string" ? request.query.query.trim() : undefined;
+  const countryCode = typeof request.query.countryCode === "string"
+    ? request.query.countryCode.trim().toUpperCase()
+    : undefined;
   const page = Math.max(1, Number(request.query.page) || 1);
   const limit = Math.min(50, Math.max(1, Number(request.query.limit) || 20));
   const skip = (page - 1) * limit;
@@ -66,6 +70,16 @@ restaurantsRouter.get("/", async (request, response) => {
   const where = {
     ...(cuisine ? { cuisine: { equals: cuisine, mode: "insensitive" as const } } : {}),
     ...(city ? { city: { contains: city, mode: "insensitive" as const } } : {}),
+    ...(countryCode ? { countryCode: { equals: countryCode } } : {}),
+    ...(query
+      ? {
+        OR: [
+          { name: { contains: query, mode: "insensitive" as const } },
+          { city: { contains: query, mode: "insensitive" as const } },
+          { address: { contains: query, mode: "insensitive" as const } },
+        ],
+      }
+      : {}),
   };
 
   const total = await prisma.restaurant.count({ where });

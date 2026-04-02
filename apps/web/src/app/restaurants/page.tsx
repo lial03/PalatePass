@@ -19,12 +19,65 @@ function ScoreBadge({ score }: { score: number | null }) {
   );
 }
 
+type CountryOption = { code: string; name: string };
+
+type PlaceSuggestion = {
+  id: string;
+  label: string;
+  name: string;
+  address: string;
+  city: string;
+  countryCode: string;
+  countryName: string;
+  lat: number;
+  lng: number;
+  placeId: string;
+};
+
+const COUNTRY_OPTIONS: CountryOption[] = [
+  { code: "NG", name: "Nigeria" },
+  { code: "GH", name: "Ghana" },
+  { code: "KE", name: "Kenya" },
+  { code: "ZA", name: "South Africa" },
+  { code: "EG", name: "Egypt" },
+  { code: "MA", name: "Morocco" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "US", name: "United States" },
+  { code: "CA", name: "Canada" },
+  { code: "FR", name: "France" },
+  { code: "DE", name: "Germany" },
+  { code: "IT", name: "Italy" },
+  { code: "ES", name: "Spain" },
+  { code: "PT", name: "Portugal" },
+  { code: "AE", name: "United Arab Emirates" },
+  { code: "IN", name: "India" },
+  { code: "JP", name: "Japan" },
+  { code: "SG", name: "Singapore" },
+  { code: "AU", name: "Australia" },
+  { code: "BR", name: "Brazil" },
+];
+
+function buildMapEmbedUrl(lat: number, lng: number) {
+  const delta = 0.015;
+  const left = lng - delta;
+  const right = lng + delta;
+  const top = lat + delta;
+  const bottom = lat - delta;
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${left}%2C${bottom}%2C${right}%2C${top}&layer=mapnik&marker=${lat}%2C${lng}`;
+}
+
 function AddRestaurantForm({ onCreated }: { onCreated: () => void }) {
   const [name, setName] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [placeSuggestions, setPlaceSuggestions] = useState<PlaceSuggestion[]>(
+    [],
+  );
+  const [knownMatches, setKnownMatches] = useState<Restaurant[]>([]);
+  const [searching, setSearching] = useState(false);
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
-  const [countryCode, setCountryCode] = useState("");
-  const [countryName, setCountryName] = useState("");
+  const [countryCode, setCountryCode] = useState("NG");
+  const [countryName, setCountryName] = useState("Nigeria");
   const [cuisine, setCuisine] = useState("");
   const [googlePlaceId, setGooglePlaceId] = useState("");
   const [lat, setLat] = useState("");
@@ -32,6 +85,116 @@ function AddRestaurantForm({ onCreated }: { onCreated: () => void }) {
   const [submissionNotes, setSubmissionNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchText.trim().length < 2) {
+      setPlaceSuggestions([]);
+      setKnownMatches([]);
+      return;
+    }
+
+    const timer = window.setTimeout(async () => {
+      setSearching(true);
+      try {
+        const [knownRes, mapRes] = await Promise.all([
+          api.restaurants.list({
+            query: searchText.trim(),
+            countryCode,
+            limit: 5,
+          }),
+          fetch(
+            `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&q=${encodeURIComponent(searchText.trim())}${countryCode ? `&countrycodes=${countryCode.toLowerCase()}` : ""}`,
+          ),
+        ]);
+
+        setKnownMatches(knownRes.data);
+
+        const mapJson = (await mapRes.json()) as Array<{
+          place_id: number;
+          display_name: string;
+          lat: string;
+          lon: string;
+          address?: {
+            road?: string;
+            house_number?: string;
+            suburb?: string;
+            city?: string;
+            town?: string;
+            village?: string;
+            county?: string;
+            country?: string;
+            country_code?: string;
+          };
+          name?: string;
+        }>;
+
+        const normalized = mapJson.map((item) => {
+          const addressLine = [
+            item.address?.house_number,
+            item.address?.road,
+            item.address?.suburb,
+          ]
+            .filter(Boolean)
+            .join(" ");
+          const suggestionCity =
+            item.address?.city ??
+            item.address?.town ??
+            item.address?.village ??
+            item.address?.county ??
+            "";
+          const suggestionCountryName = item.address?.country ?? countryName;
+          const suggestionCountryCode = (
+            item.address?.country_code ?? countryCode
+          ).toUpperCase();
+          const mainName =
+            item.name ?? item.display_name.split(",")[0] ?? searchText.trim();
+
+          return {
+            id: String(item.place_id),
+            label: item.display_name,
+            name: mainName,
+            address: addressLine || item.display_name,
+            city: suggestionCity,
+            countryCode: suggestionCountryCode,
+            countryName: suggestionCountryName,
+            lat: Number(item.lat),
+            lng: Number(item.lon),
+            placeId: String(item.place_id),
+          } satisfies PlaceSuggestion;
+        });
+
+        setPlaceSuggestions(normalized);
+      } catch {
+        setPlaceSuggestions([]);
+        setKnownMatches([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [searchText, countryCode, countryName]);
+
+  function handleCountryChange(nextCode: string) {
+    const selected = COUNTRY_OPTIONS.find(
+      (country) => country.code === nextCode,
+    );
+    setCountryCode(nextCode);
+    setCountryName(selected?.name ?? "");
+  }
+
+  function applySuggestion(suggestion: PlaceSuggestion) {
+    setName(suggestion.name);
+    setAddress(suggestion.address);
+    setCity(suggestion.city);
+    setCountryCode(suggestion.countryCode);
+    setCountryName(suggestion.countryName);
+    setGooglePlaceId(suggestion.placeId);
+    setLat(String(suggestion.lat));
+    setLng(String(suggestion.lng));
+    setSearchText(suggestion.label);
+    setPlaceSuggestions([]);
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -51,15 +214,18 @@ function AddRestaurantForm({ onCreated }: { onCreated: () => void }) {
         lng: lng ? Number(lng) : undefined,
       });
       setName("");
+      setSearchText("");
       setAddress("");
       setCity("");
-      setCountryCode("");
-      setCountryName("");
+      setCountryCode("NG");
+      setCountryName("Nigeria");
       setCuisine("");
       setGooglePlaceId("");
       setLat("");
       setLng("");
       setSubmissionNotes("");
+      setPlaceSuggestions([]);
+      setKnownMatches([]);
       onCreated();
     } catch (submitError) {
       setError(
@@ -79,8 +245,62 @@ function AddRestaurantForm({ onCreated }: { onCreated: () => void }) {
     >
       <h2 className="font-serif text-2xl">Add A Restaurant</h2>
       <p className="mt-1 text-sm text-muted">
-        Pin with Google Place ID if available, or add manually.
+        Type restaurant name or area to find known places and pin on map.
       </p>
+
+      <div className="mt-4 space-y-2">
+        <input
+          value={searchText}
+          onChange={(event) => setSearchText(event.target.value)}
+          placeholder="Search restaurant or area"
+          className="w-full rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
+        />
+
+        {searching && (
+          <p className="text-xs text-muted">
+            Searching map and known restaurants...
+          </p>
+        )}
+
+        {knownMatches.length > 0 && (
+          <div className="rounded-2xl border border-border bg-white/60 p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+              Known restaurants
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {knownMatches.map((match) => (
+                <Link
+                  key={match.id}
+                  href={`/restaurants/${match.id}`}
+                  className="rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted hover:border-accent/30"
+                >
+                  {match.name} ({match.city})
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {placeSuggestions.length > 0 && (
+          <div className="rounded-2xl border border-border bg-white/60 p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+              Map suggestions
+            </p>
+            <div className="mt-2 flex flex-col gap-2">
+              {placeSuggestions.map((suggestion) => (
+                <button
+                  key={suggestion.id}
+                  type="button"
+                  onClick={() => applySuggestion(suggestion)}
+                  className="rounded-xl border border-border bg-surface px-3 py-2 text-left text-xs text-muted transition hover:border-accent/30"
+                >
+                  {suggestion.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <input
@@ -111,25 +331,21 @@ function AddRestaurantForm({ onCreated }: { onCreated: () => void }) {
           required
           className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
         />
-        <input
-          value={countryName}
-          onChange={(event) => setCountryName(event.target.value)}
-          placeholder="Country"
-          required
-          className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
-        />
-        <input
+        <select
           value={countryCode}
-          onChange={(event) => setCountryCode(event.target.value.toUpperCase())}
-          placeholder="Country code (e.g. NG)"
-          required
-          maxLength={2}
-          className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm uppercase outline-none ring-accent focus:ring-2"
-        />
+          onChange={(event) => handleCountryChange(event.target.value)}
+          className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
+        >
+          {COUNTRY_OPTIONS.map((country) => (
+            <option key={country.code} value={country.code}>
+              {country.name}
+            </option>
+          ))}
+        </select>
         <input
           value={googlePlaceId}
           onChange={(event) => setGooglePlaceId(event.target.value)}
-          placeholder="Google Place ID (optional)"
+          placeholder="Place reference ID (optional)"
           className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
         />
         <input
@@ -147,6 +363,19 @@ function AddRestaurantForm({ onCreated }: { onCreated: () => void }) {
           className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
         />
       </div>
+
+      {lat &&
+        lng &&
+        !Number.isNaN(Number(lat)) &&
+        !Number.isNaN(Number(lng)) && (
+          <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-white/60">
+            <iframe
+              title="Location preview"
+              src={buildMapEmbedUrl(Number(lat), Number(lng))}
+              className="h-56 w-full"
+            />
+          </div>
+        )}
 
       <textarea
         value={submissionNotes}
