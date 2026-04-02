@@ -5,7 +5,7 @@ import { requireAuth, type AuthenticatedRequest } from "../middleware/auth.js";
 
 type RestaurantListRow = {
   id: string; name: string; address: string; city: string; cuisine: string;
-  lat: number | null; lng: number | null; createdBy: string; createdAt: Date;
+  lat: number | null; lng: number | null; createdBy: string; createdAt: Date; sponsored: boolean;
   _count: { ratings: number };
   ratings: { score: number }[];
 };
@@ -53,11 +53,11 @@ restaurantsRouter.get("/", async (request, response) => {
     where,
     skip,
     take: limit,
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ sponsored: "desc" }, { createdAt: "desc" }],
     include: { _count: { select: { ratings: true } }, ratings: { select: { score: true } } },
   });
 
-  const data = (restaurants as RestaurantListRow[]).map((r) => {
+  const data = (restaurants as unknown as RestaurantListRow[]).map((r) => {
     const avg =
       r.ratings.length > 0
         ? r.ratings.reduce((sum: number, rt: { score: number }) => sum + rt.score, 0) / r.ratings.length
@@ -72,6 +72,7 @@ restaurantsRouter.get("/", async (request, response) => {
       lng: r.lng,
       createdBy: r.createdBy,
       createdAt: r.createdAt,
+      sponsored: r.sponsored,
       averageScore: avg !== null ? Math.round(avg * 10) / 10 : null,
       ratingCount: r._count.ratings,
     };
@@ -135,6 +136,7 @@ restaurantsRouter.get("/:id", async (request, response) => {
       lng: restaurant.lng,
       createdBy: restaurant.createdBy,
       createdAt: restaurant.createdAt,
+      sponsored: (restaurant as unknown as { sponsored: boolean }).sponsored,
       averageScore: avgScore !== null ? Math.round(avgScore * 10) / 10 : null,
       ratingCount: restaurant.ratings.length,
     },
@@ -232,4 +234,57 @@ restaurantsRouter.post(
   },
 );
 
+// PATCH /restaurants/:id/sponsored — toggle sponsored status (auth required)
+restaurantsRouter.patch("/:id/sponsored", requireAuth, async (request: AuthenticatedRequest, response) => {
+  const restaurantIdParam = Array.isArray(request.params.id)
+    ? request.params.id[0]
+    : request.params.id;
+
+  const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantIdParam } });
+
+  if (!restaurant) {
+    response.status(404).json({ message: "Restaurant not found" });
+    return;
+  }
+
+  const currentSponsored = Boolean((restaurant as { sponsored?: boolean }).sponsored);
+
+  const updated = await (prisma.restaurant as unknown as {
+    update: (args: {
+      where: { id: string };
+      data: { sponsored: boolean };
+    }) => Promise<{
+      id: string;
+      name: string;
+      address: string;
+      city: string;
+      cuisine: string;
+      lat: number | null;
+      lng: number | null;
+      createdBy: string;
+      createdAt: Date;
+      sponsored: boolean;
+    }>;
+  }).update({
+    where: { id: restaurantIdParam },
+    data: { sponsored: !currentSponsored },
+  });
+
+  response.json({
+    restaurant: {
+      id: updated.id,
+      name: updated.name,
+      address: updated.address,
+      city: updated.city,
+      cuisine: updated.cuisine,
+      lat: updated.lat,
+      lng: updated.lng,
+      createdBy: updated.createdBy,
+      createdAt: updated.createdAt,
+      sponsored: (updated as unknown as { sponsored: boolean }).sponsored,
+    },
+  });
+});
+
 export { restaurantsRouter };
+
