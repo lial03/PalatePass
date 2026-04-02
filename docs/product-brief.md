@@ -137,6 +137,7 @@ PalatePass differentiates with trust-first social discovery, taste matching, and
 - Web app supports registration, login, restaurant browsing, ratings, social recommendations, and public user profiles.
 - Taste Match is implemented as a user-to-user compatibility score based on shared restaurants, cuisines, and tags.
 - Authentication is hardened with httpOnly cookies, JWT expiry handling, and inactivity logout.
+- QR sharing is implemented for public profiles and individual reviews.
 
 ## Expansion Ideas
 

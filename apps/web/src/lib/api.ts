@@ -33,6 +33,7 @@ export type RatingSummary = {
   notes: string | null;
   tags: string[];
   userId: string;
+  restaurantId: string;
   displayName: string;
   createdAt: string;
 };

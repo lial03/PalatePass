@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { ShareQr } from "../../../components/ShareQr";
 import { useAuth } from "../../../context/AuthContext";
 import {
   api,
@@ -19,17 +20,37 @@ function Stars({ score }: { score: number }) {
   );
 }
 
-function RatingCard({ rating }: { rating: RatingSummary }) {
+function RatingCard({
+  rating,
+  isHighlighted,
+}: {
+  rating: RatingSummary;
+  isHighlighted: boolean;
+}) {
+  const [showShare, setShowShare] = useState(false);
+
   return (
-    <div className="rounded-3xl border border-border bg-white/70 p-5">
+    <div
+      id={`review-${rating.id}`}
+      className={`rounded-3xl border bg-white/70 p-5 ${isHighlighted ? "border-accent ring-2 ring-accent/20" : "border-border"}`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold">{rating.displayName}</p>
           <Stars score={rating.score} />
         </div>
-        <p className="text-xs text-muted">
-          {new Date(rating.createdAt).toLocaleDateString()}
-        </p>
+        <div className="text-right">
+          <p className="text-xs text-muted">
+            {new Date(rating.createdAt).toLocaleDateString()}
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowShare((value) => !value)}
+            className="mt-2 text-xs font-semibold text-accent hover:underline"
+          >
+            {showShare ? "Hide QR" : "Share review"}
+          </button>
+        </div>
       </div>
       {rating.notes && (
         <p className="mt-3 text-sm leading-7 text-muted">{rating.notes}</p>
@@ -44,6 +65,15 @@ function RatingCard({ rating }: { rating: RatingSummary }) {
               {tag}
             </span>
           ))}
+        </div>
+      )}
+      {showShare && (
+        <div className="mt-4">
+          <ShareQr
+            title="Share this review"
+            description="This QR code opens the restaurant page and jumps straight to this review."
+            path={`/restaurants/${rating.restaurantId}?review=${rating.id}`}
+          />
         </div>
       )}
     </div>
@@ -131,6 +161,8 @@ function RateForm({
 export default function RestaurantDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
+  const searchParams = useSearchParams();
+  const reviewId = searchParams.get("review");
   const { user, ready } = useAuth();
   const router = useRouter();
 
@@ -156,6 +188,12 @@ export default function RestaurantDetailPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!reviewId) return;
+    const element = document.getElementById(`review-${reviewId}`);
+    element?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [reviewId, ratings]);
 
   if (loading) {
     return (
@@ -258,7 +296,11 @@ export default function RestaurantDetailPage() {
         ) : (
           <div className="mt-4 flex flex-col gap-3">
             {ratings.map((r) => (
-              <RatingCard key={r.id} rating={r} />
+              <RatingCard
+                key={r.id}
+                rating={r}
+                isHighlighted={r.id === reviewId}
+              />
             ))}
           </div>
         )}
