@@ -15,6 +15,7 @@ const { mockPrisma } = vi.hoisted(() => ({
       update: vi.fn(),
     },
     rating: {
+      findMany: vi.fn(),
       findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
@@ -61,6 +62,7 @@ describe("restaurants routes", () => {
     mockPrisma.restaurant.findUnique.mockReset();
     mockPrisma.restaurant.create.mockReset();
     mockPrisma.restaurant.update.mockReset();
+    mockPrisma.rating.findMany.mockReset();
     mockPrisma.rating.findUnique.mockReset();
     mockPrisma.rating.create.mockReset();
     mockPrisma.rating.update.mockReset();
@@ -168,6 +170,46 @@ describe("restaurants routes", () => {
     expect(res.status).toBe(404);
   });
 
+  // --- GET /restaurants/:id/analytics ---
+
+  it("returns analytics snapshot for a restaurant", async () => {
+    mockPrisma.restaurant.findUnique.mockResolvedValueOnce({ id: "rest_1" });
+    mockPrisma.rating.findMany.mockResolvedValueOnce([
+      {
+        score: 5,
+        createdAt: new Date("2026-03-14T12:00:00.000Z"),
+        tags: [{ name: "cozy" }, { name: "date-night" }],
+      },
+      {
+        score: 4,
+        createdAt: new Date("2026-03-10T12:00:00.000Z"),
+        tags: [{ name: "cozy" }],
+      },
+      {
+        score: 3,
+        createdAt: new Date("2026-02-20T12:00:00.000Z"),
+        tags: [{ name: "affordable" }],
+      },
+    ]);
+
+    const res = await request(makeTestApp()).get("/restaurants/rest_1/analytics");
+
+    expect(res.status).toBe(200);
+    expect(res.body.analytics.ratingCount).toBe(3);
+    expect(res.body.analytics.averageScore).toBe(4);
+    expect(res.body.analytics.topTags[0]).toEqual({ name: "cozy", count: 2 });
+    expect(res.body.analytics.recentActivity.last7Days).toBeGreaterThanOrEqual(0);
+    expect(res.body.analytics.recentActivity.last30Days).toBeGreaterThanOrEqual(0);
+  });
+
+  it("returns 404 analytics for unknown restaurant", async () => {
+    mockPrisma.restaurant.findUnique.mockResolvedValueOnce(null);
+
+    const res = await request(makeTestApp()).get("/restaurants/bad-id/analytics");
+
+    expect(res.status).toBe(404);
+  });
+
   // --- POST /restaurants/:id/ratings ---
 
   it("creates a rating for an existing restaurant", async () => {
@@ -242,42 +284,35 @@ describe("restaurants routes", () => {
 
     expect(res.status).toBe(401);
   });
-    it("returns 401 rating without auth", async () => {
-      const res = await request(makeTestApp())
-        .post("/restaurants/rest_1/ratings")
-        .send({ score: 3 });
 
-      expect(res.status).toBe(401);
-    });
+  // --- PATCH /restaurants/:id/sponsored ---
 
-    // --- PATCH /restaurants/:id/sponsored ---
+  it("toggles sponsored status when authenticated", async () => {
+    mockPrisma.restaurant.findUnique.mockResolvedValueOnce({ ...sampleRestaurant, sponsored: false });
+    mockPrisma.restaurant.update.mockResolvedValueOnce({ ...sampleRestaurant, sponsored: true });
 
-    it("toggles sponsored status when authenticated", async () => {
-      mockPrisma.restaurant.findUnique.mockResolvedValueOnce({ ...sampleRestaurant, sponsored: false });
-      mockPrisma.restaurant.update.mockResolvedValueOnce({ ...sampleRestaurant, sponsored: true });
+    const res = await request(makeTestApp())
+      .patch("/restaurants/rest_1/sponsored")
+      .set("Authorization", `Bearer ${token}`);
 
-      const res = await request(makeTestApp())
-        .patch("/restaurants/rest_1/sponsored")
-        .set("Authorization", `Bearer ${token}`);
-
-      expect(res.status).toBe(200);
-      expect(res.body.restaurant.sponsored).toBe(true);
-    });
-
-    it("returns 404 toggling sponsored for unknown restaurant", async () => {
-      mockPrisma.restaurant.findUnique.mockResolvedValueOnce(null);
-
-      const res = await request(makeTestApp())
-        .patch("/restaurants/bad-id/sponsored")
-        .set("Authorization", `Bearer ${token}`);
-
-      expect(res.status).toBe(404);
-    });
-
-    it("returns 401 toggling sponsored without auth", async () => {
-      const res = await request(makeTestApp())
-        .patch("/restaurants/rest_1/sponsored");
-
-      expect(res.status).toBe(401);
-    });
+    expect(res.status).toBe(200);
+    expect(res.body.restaurant.sponsored).toBe(true);
   });
+
+  it("returns 404 toggling sponsored for unknown restaurant", async () => {
+    mockPrisma.restaurant.findUnique.mockResolvedValueOnce(null);
+
+    const res = await request(makeTestApp())
+      .patch("/restaurants/bad-id/sponsored")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 401 toggling sponsored without auth", async () => {
+    const res = await request(makeTestApp())
+      .patch("/restaurants/rest_1/sponsored");
+
+    expect(res.status).toBe(401);
+  });
+});

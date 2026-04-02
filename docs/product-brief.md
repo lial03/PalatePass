@@ -140,6 +140,7 @@ PalatePass differentiates with trust-first social discovery, taste matching, and
 - QR sharing is implemented for public profiles and individual reviews.
 - Affiliate partnerships MVP is implemented with clearly labeled delivery and reservation links plus click tracking hooks.
 - Sponsored placements MVP is implemented with clear labels and prioritized placement in restaurant listings.
+- Restaurant analytics groundwork is implemented with rating volume, top tags, and recent-activity metrics.
 
 ## Expansion Ideas
 

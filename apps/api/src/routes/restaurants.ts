@@ -152,6 +152,80 @@ restaurantsRouter.get("/:id", async (request, response) => {
   });
 });
 
+// GET /restaurants/:id/analytics — basic analytics snapshot
+restaurantsRouter.get("/:id/analytics", async (request, response) => {
+  const restaurantIdParam = Array.isArray(request.params.id)
+    ? request.params.id[0]
+    : request.params.id;
+
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { id: restaurantIdParam },
+    select: { id: true },
+  });
+
+  if (!restaurant) {
+    response.status(404).json({ message: "Restaurant not found" });
+    return;
+  }
+
+  const rows = await prisma.rating.findMany({
+    where: { restaurantId: restaurantIdParam },
+    select: {
+      score: true,
+      createdAt: true,
+      tags: { select: { name: true } },
+    },
+  });
+
+  const ratingCount = rows.length;
+  const averageScore =
+    ratingCount > 0
+      ? Math.round((rows.reduce((sum: number, row: { score: number }) => sum + row.score, 0) / ratingCount) * 10) / 10
+      : null;
+
+  const now = Date.now();
+  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+
+  let last7Days = 0;
+  let last30Days = 0;
+  const tagCounts = new Map<string, number>();
+
+  for (const row of rows) {
+    const created = row.createdAt.getTime();
+    if (created >= thirtyDaysAgo) {
+      last30Days += 1;
+      if (created >= sevenDaysAgo) {
+        last7Days += 1;
+      }
+    }
+
+    for (const tag of row.tags) {
+      tagCounts.set(tag.name, (tagCounts.get(tag.name) ?? 0) + 1);
+    }
+  }
+
+  const topTags = Array.from(tagCounts.entries())
+    .sort((a, b) => {
+      if (b[1] !== a[1]) return b[1] - a[1];
+      return a[0].localeCompare(b[0]);
+    })
+    .slice(0, 5)
+    .map(([name, count]) => ({ name, count }));
+
+  response.json({
+    analytics: {
+      ratingCount,
+      averageScore,
+      topTags,
+      recentActivity: {
+        last7Days,
+        last30Days,
+      },
+    },
+  });
+});
+
 // POST /restaurants/:id/ratings — add or update rating (auth required)
 restaurantsRouter.post(
   "/:id/ratings",

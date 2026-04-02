@@ -118,11 +118,12 @@ PalatePass solves this by making discovery social, personalized, and shareable.
 - QR sharing: profile QR and review QR with copyable links
 - Affiliate partnerships: clearly labeled delivery/reservation links with click tracking hooks
 - Sponsored placements: sponsored restaurant badges plus prioritized listing order
+- Restaurant analytics groundwork: detail-page metrics for rating volume, top tags, and recent activity
 - API hardening: cookie-based auth with CORS credentials and 16kb JSON body limit
 
 ### Up next
 
-- Restaurant analytics groundwork
+- Premium analytics and trend visualizations
 
 ## Competitive Advantage
 

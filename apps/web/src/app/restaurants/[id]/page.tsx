@@ -9,6 +9,7 @@ import { buildAffiliateUrl, trackAffiliateClick } from "../../../lib/affiliate";
 import {
   api,
   type RatingSummary,
+  type RestaurantAnalytics,
   type RestaurantDetail,
 } from "../../../lib/api";
 
@@ -235,6 +236,7 @@ export default function RestaurantDetailPage() {
   const router = useRouter();
 
   const [restaurant, setRestaurant] = useState<RestaurantDetail | null>(null);
+  const [analytics, setAnalytics] = useState<RestaurantAnalytics | null>(null);
   const [ratings, setRatings] = useState<RatingSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -243,9 +245,13 @@ export default function RestaurantDetailPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.restaurants.get(id);
-      setRestaurant(res.restaurant);
-      setRatings(res.ratings);
+      const [restaurantRes, analyticsRes] = await Promise.all([
+        api.restaurants.get(id),
+        api.restaurants.analytics(id),
+      ]);
+      setRestaurant(restaurantRes.restaurant);
+      setRatings(restaurantRes.ratings);
+      setAnalytics(analyticsRes.analytics);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Restaurant not found");
     } finally {
@@ -332,6 +338,74 @@ export default function RestaurantDetailPage() {
           </span>
         </div>
       </div>
+
+      {analytics && (
+        <section className="mt-6 rounded-4xl border border-border bg-white/70 p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.16em] text-muted">
+                Restaurant analytics
+              </p>
+              <h2 className="mt-1 font-serif text-2xl">
+                Early metrics snapshot
+              </h2>
+            </div>
+            <span className="rounded-full border border-border bg-surface px-4 py-1 text-xs font-semibold text-muted">
+              Groundwork
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-3xl border border-border bg-surface px-4 py-3">
+              <p className="text-xs uppercase tracking-[0.14em] text-muted">
+                Ratings
+              </p>
+              <p className="mt-1 text-xl font-semibold">
+                {analytics.ratingCount}
+              </p>
+            </div>
+            <div className="rounded-3xl border border-border bg-surface px-4 py-3">
+              <p className="text-xs uppercase tracking-[0.14em] text-muted">
+                Average score
+              </p>
+              <p className="mt-1 text-xl font-semibold">
+                {analytics.averageScore === null
+                  ? "-"
+                  : analytics.averageScore.toFixed(1)}
+              </p>
+            </div>
+            <div className="rounded-3xl border border-border bg-surface px-4 py-3">
+              <p className="text-xs uppercase tracking-[0.14em] text-muted">
+                Recent activity
+              </p>
+              <p className="mt-1 text-sm text-muted">
+                {analytics.recentActivity.last7Days} in 7d,{" "}
+                {analytics.recentActivity.last30Days} in 30d
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-3xl border border-border bg-surface px-4 py-3">
+            <p className="text-xs uppercase tracking-[0.14em] text-muted">
+              Top tags
+            </p>
+            {analytics.topTags.length === 0 ? (
+              <p className="mt-2 text-sm text-muted">No tags yet.</p>
+            ) : (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {analytics.topTags.map((tag) => (
+                  <span
+                    key={tag.name}
+                    className="rounded-full border border-border bg-white/80 px-3 py-1 text-xs text-muted"
+                  >
+                    {tag.name} ({tag.count})
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       <AffiliateActions restaurant={restaurant} />
 

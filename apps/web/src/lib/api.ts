@@ -41,6 +41,16 @@ export type RatingSummary = {
 
 export type RestaurantDetail = Restaurant;
 
+export type RestaurantAnalytics = {
+  ratingCount: number;
+  averageScore: number | null;
+  topTags: Array<{ name: string; count: number }>;
+  recentActivity: {
+    last7Days: number;
+    last30Days: number;
+  };
+};
+
 export type Recommendation = {
   restaurantId: string;
   name: string;
@@ -133,6 +143,8 @@ export const api = {
       apiFetch<{ restaurant: RestaurantDetail; ratings: RatingSummary[] }>(
         `/restaurants/${id}`,
       ),
+    analytics: (id: string) =>
+      apiFetch<{ analytics: RestaurantAnalytics }>(`/restaurants/${id}/analytics`),
     rate: (
       id: string,
       body: { score: number; notes?: string; tags?: string[] },
