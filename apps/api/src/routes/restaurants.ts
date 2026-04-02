@@ -5,6 +5,7 @@ import { requireAuth, type AuthenticatedRequest } from "../middleware/auth.js";
 
 type RestaurantListRow = {
   id: string; name: string; address: string; city: string; cuisine: string;
+  countryCode: string | null; countryName: string | null; googlePlaceId: string | null; submissionNotes: string | null;
   lat: number | null; lng: number | null; createdBy: string; createdAt: Date; sponsored: boolean;
   _count: { ratings: number };
   ratings: { score: number }[];
@@ -12,6 +13,7 @@ type RestaurantListRow = {
 
 type RatingRow = {
   id: string; score: number; notes: string | null; userId: string; createdAt: Date;
+  photoUrls: string[]; budgetTier: string | null; budgetAmount: number | null; budgetCurrency: string | null;
   user: { id: string; displayName: string };
   tags: { name: string }[];
 };
@@ -24,7 +26,11 @@ const createRestaurantSchema = z.object({
   name: z.string().min(1).max(120),
   address: z.string().min(1),
   city: z.string().min(1).max(80),
+  countryCode: z.string().trim().length(2).transform((value) => value.toUpperCase()),
+  countryName: z.string().min(2).max(80),
   cuisine: z.string().min(1).max(60),
+  googlePlaceId: z.string().max(180).optional(),
+  submissionNotes: z.string().max(600).optional(),
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
 });
@@ -33,6 +39,20 @@ const createRatingSchema = z.object({
   score: z.number().int().min(1).max(5),
   notes: z.string().max(1000).optional(),
   tags: z.array(z.string().min(1).max(40)).max(10).default([]),
+  photoUrls: z.array(z.string().url().max(500)).max(8).default([]),
+  budgetTier: z.enum(["budget", "mid", "premium", "luxury"]).optional(),
+  budgetAmount: z.number().int().min(0).max(1_000_000).optional(),
+  budgetCurrency: z.string().trim().length(3).transform((value) => value.toUpperCase()).optional(),
+}).superRefine((value, context) => {
+  const hasAmount = typeof value.budgetAmount === "number";
+  const hasCurrency = typeof value.budgetCurrency === "string";
+  if (hasAmount !== hasCurrency) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "budgetAmount and budgetCurrency must be provided together",
+      path: hasAmount ? ["budgetCurrency"] : ["budgetAmount"],
+    });
+  }
 });
 
 // GET /restaurants — list with optional filters and pagination
@@ -67,7 +87,11 @@ restaurantsRouter.get("/", async (request, response) => {
       name: r.name,
       address: r.address,
       city: r.city,
+      countryCode: r.countryCode,
+      countryName: r.countryName,
       cuisine: r.cuisine,
+      googlePlaceId: r.googlePlaceId,
+      submissionNotes: r.submissionNotes,
       lat: r.lat,
       lng: r.lng,
       createdBy: r.createdBy,
@@ -122,7 +146,7 @@ restaurantsRouter.get("/:id", async (request, response) => {
 
   const avgScore =
     restaurant.ratings.length > 0
-      ? (restaurant.ratings as RatingRow[]).reduce((sum: number, r) => sum + r.score, 0) / restaurant.ratings.length
+      ? (restaurant.ratings as unknown as RatingRow[]).reduce((sum: number, r) => sum + r.score, 0) / restaurant.ratings.length
       : null;
 
   response.json({
@@ -131,7 +155,11 @@ restaurantsRouter.get("/:id", async (request, response) => {
       name: restaurant.name,
       address: restaurant.address,
       city: restaurant.city,
+      countryCode: (restaurant as unknown as { countryCode: string | null }).countryCode,
+      countryName: (restaurant as unknown as { countryName: string | null }).countryName,
       cuisine: restaurant.cuisine,
+      googlePlaceId: (restaurant as unknown as { googlePlaceId: string | null }).googlePlaceId,
+      submissionNotes: (restaurant as unknown as { submissionNotes: string | null }).submissionNotes,
       lat: restaurant.lat,
       lng: restaurant.lng,
       createdBy: restaurant.createdBy,
@@ -140,10 +168,14 @@ restaurantsRouter.get("/:id", async (request, response) => {
       averageScore: avgScore !== null ? Math.round(avgScore * 10) / 10 : null,
       ratingCount: restaurant.ratings.length,
     },
-    ratings: (restaurant.ratings as RatingRow[]).map((r) => ({
+    ratings: (restaurant.ratings as unknown as RatingRow[]).map((r) => ({
       id: r.id,
       score: r.score,
       notes: r.notes,
+      photoUrls: r.photoUrls,
+      budgetTier: r.budgetTier,
+      budgetAmount: r.budgetAmount,
+      budgetCurrency: r.budgetCurrency,
       tags: r.tags.map((t: TagName) => t.name),
       userId: r.userId,
       displayName: r.user.displayName,
@@ -248,7 +280,7 @@ restaurantsRouter.post(
       return;
     }
 
-    const { score, notes, tags } = parsed.data;
+    const { score, notes, tags, photoUrls, budgetTier, budgetAmount, budgetCurrency } = parsed.data;
     const userId = request.authUser!.id;
     const restaurantId = restaurant.id;
 
@@ -276,6 +308,10 @@ restaurantsRouter.post(
         data: {
           score,
           notes: notes ?? null,
+          photoUrls,
+          budgetTier: budgetTier ?? null,
+          budgetAmount: budgetAmount ?? null,
+          budgetCurrency: budgetCurrency ?? null,
           tags: { set: tagRecords.map((t) => ({ id: t.id })) },
         },
         include: { tags: { select: { name: true } } },
@@ -285,6 +321,10 @@ restaurantsRouter.post(
         data: {
           score,
           notes: notes ?? null,
+          photoUrls,
+          budgetTier: budgetTier ?? null,
+          budgetAmount: budgetAmount ?? null,
+          budgetCurrency: budgetCurrency ?? null,
           userId,
           restaurantId,
           tags: { connect: tagRecords.map((t) => ({ id: t.id })) },
@@ -298,6 +338,10 @@ restaurantsRouter.post(
         id: rating.id,
         score: rating.score,
         notes: rating.notes,
+        photoUrls: (rating as unknown as { photoUrls: string[] }).photoUrls,
+        budgetTier: (rating as unknown as { budgetTier: string | null }).budgetTier,
+        budgetAmount: (rating as unknown as { budgetAmount: number | null }).budgetAmount,
+        budgetCurrency: (rating as unknown as { budgetCurrency: string | null }).budgetCurrency,
         tags: (rating.tags as TagName[]).map((t) => t.name),
         userId: rating.userId,
         restaurantId: rating.restaurantId,
