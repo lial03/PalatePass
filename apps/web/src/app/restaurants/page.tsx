@@ -138,9 +138,16 @@ export default function RestaurantsPage() {
               className="group block rounded-3xl border border-border bg-surface p-5 transition hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(70,32,13,0.09)]"
             >
               <div className="mb-1 flex items-center justify-between gap-2">
-                <span className="rounded-full border border-border bg-white/80 px-3 py-0.5 text-xs font-medium text-muted">
-                  {r.cuisine}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full border border-border bg-white/80 px-3 py-0.5 text-xs font-medium text-muted">
+                    {r.cuisine}
+                  </span>
+                  {r.sponsored && (
+                    <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-0.5 text-xs font-semibold text-accent">
+                      Sponsored
+                    </span>
+                  )}
+                </div>
                 <span className="text-xs text-muted">{r.city}</span>
               </div>
               <h2 className="mt-3 font-serif text-xl font-semibold group-hover:text-accent">

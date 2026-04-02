@@ -12,6 +12,7 @@ const { mockPrisma } = vi.hoisted(() => ({
       findMany: vi.fn(),
       findUnique: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
     },
     rating: {
       findUnique: vi.fn(),
@@ -48,6 +49,7 @@ const sampleRestaurant = {
   lat: 51.5,
   lng: -0.12,
   createdBy: "user_1",
+  sponsored: false,
   createdAt: now,
   updatedAt: now,
 };
@@ -58,6 +60,7 @@ describe("restaurants routes", () => {
     mockPrisma.restaurant.findMany.mockReset();
     mockPrisma.restaurant.findUnique.mockReset();
     mockPrisma.restaurant.create.mockReset();
+    mockPrisma.restaurant.update.mockReset();
     mockPrisma.rating.findUnique.mockReset();
     mockPrisma.rating.create.mockReset();
     mockPrisma.rating.update.mockReset();
@@ -239,4 +242,42 @@ describe("restaurants routes", () => {
 
     expect(res.status).toBe(401);
   });
-});
+    it("returns 401 rating without auth", async () => {
+      const res = await request(makeTestApp())
+        .post("/restaurants/rest_1/ratings")
+        .send({ score: 3 });
+
+      expect(res.status).toBe(401);
+    });
+
+    // --- PATCH /restaurants/:id/sponsored ---
+
+    it("toggles sponsored status when authenticated", async () => {
+      mockPrisma.restaurant.findUnique.mockResolvedValueOnce({ ...sampleRestaurant, sponsored: false });
+      mockPrisma.restaurant.update.mockResolvedValueOnce({ ...sampleRestaurant, sponsored: true });
+
+      const res = await request(makeTestApp())
+        .patch("/restaurants/rest_1/sponsored")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.restaurant.sponsored).toBe(true);
+    });
+
+    it("returns 404 toggling sponsored for unknown restaurant", async () => {
+      mockPrisma.restaurant.findUnique.mockResolvedValueOnce(null);
+
+      const res = await request(makeTestApp())
+        .patch("/restaurants/bad-id/sponsored")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(404);
+    });
+
+    it("returns 401 toggling sponsored without auth", async () => {
+      const res = await request(makeTestApp())
+        .patch("/restaurants/rest_1/sponsored");
+
+      expect(res.status).toBe(401);
+    });
+  });

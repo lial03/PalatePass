@@ -139,6 +139,7 @@ PalatePass differentiates with trust-first social discovery, taste matching, and
 - Authentication is hardened with httpOnly cookies, JWT expiry handling, and inactivity logout.
 - QR sharing is implemented for public profiles and individual reviews.
 - Affiliate partnerships MVP is implemented with clearly labeled delivery and reservation links plus click tracking hooks.
+- Sponsored placements MVP is implemented with clear labels and prioritized placement in restaurant listings.
 
 ## Expansion Ideas
 
