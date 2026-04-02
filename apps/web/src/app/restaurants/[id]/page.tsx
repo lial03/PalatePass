@@ -300,9 +300,16 @@ export default function RestaurantDetailPage() {
       </Link>
 
       <div className="rounded-4xl border border-border bg-surface p-8 shadow-[0_20px_60px_rgba(70,32,13,0.07)]">
-        <span className="rounded-full border border-border bg-white/80 px-3 py-0.5 text-xs font-medium text-muted">
-          {restaurant.cuisine}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full border border-border bg-white/80 px-3 py-0.5 text-xs font-medium text-muted">
+            {restaurant.cuisine}
+          </span>
+          {restaurant.sponsored && (
+            <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-0.5 text-xs font-semibold text-accent">
+              Sponsored
+            </span>
+          )}
+        </div>
         <h1 className="mt-3 font-serif text-4xl">{restaurant.name}</h1>
         <p className="mt-1 text-sm text-muted">
           {restaurant.address}, {restaurant.city}

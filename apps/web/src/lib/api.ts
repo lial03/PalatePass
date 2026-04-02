@@ -23,6 +23,7 @@ export type Restaurant = {
   lng: number | null;
   createdBy: string;
   createdAt: string;
+  sponsored: boolean;
   averageScore: number | null;
   ratingCount: number;
 };
@@ -139,6 +140,10 @@ export const api = {
       apiFetch<{ rating: RatingSummary }>(`/restaurants/${id}/ratings`, {
         method: "POST",
         body: JSON.stringify(body),
+      }),
+    toggleSponsored: (id: string) =>
+      apiFetch<{ restaurant: Restaurant }>(`/restaurants/${id}/sponsored`, {
+        method: "PATCH",
       }),
   },
   recommendations: {
