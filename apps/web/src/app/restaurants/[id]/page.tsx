@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ShareQr } from "../../../components/ShareQr";
 import { useAuth } from "../../../context/AuthContext";
+import { buildAffiliateUrl, trackAffiliateClick } from "../../../lib/affiliate";
 import {
   api,
   type RatingSummary,
@@ -77,6 +78,73 @@ function RatingCard({
         </div>
       )}
     </div>
+  );
+}
+
+function AffiliateActions({ restaurant }: { restaurant: RestaurantDetail }) {
+  const deliveryUrl = buildAffiliateUrl(restaurant, "delivery");
+  const reservationUrl = buildAffiliateUrl(restaurant, "reservation");
+
+  function handleAffiliateClick(
+    partner: "delivery" | "reservation",
+    destination: string,
+  ) {
+    return () => {
+      void trackAffiliateClick({
+        restaurantId: restaurant.id,
+        partner,
+        destination,
+        context: "restaurant-detail",
+      });
+    };
+  }
+
+  return (
+    <section className="mt-6 rounded-4xl border border-border bg-white/70 p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-sm uppercase tracking-[0.16em] text-muted">
+            Affiliate partnerships
+          </p>
+          <h2 className="mt-1 font-serif text-2xl">Order or reserve</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-muted">
+            These outbound links take you to partner search pages. PalatePass
+            may earn a commission when you complete a booking or order.
+          </p>
+        </div>
+        <span className="rounded-full border border-accent/30 bg-accent/10 px-4 py-1 text-xs font-semibold text-accent">
+          Clearly labeled
+        </span>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <a
+          href={deliveryUrl}
+          target="_blank"
+          rel="noreferrer"
+          onClick={handleAffiliateClick("delivery", deliveryUrl)}
+          className="rounded-3xl border border-border bg-surface px-4 py-4 text-left transition hover:border-accent/30 hover:bg-white/90"
+        >
+          <p className="text-sm font-semibold">Order delivery</p>
+          <p className="mt-1 text-sm text-muted">
+            Open a delivery partner search for {restaurant.name}.
+          </p>
+        </a>
+
+        <a
+          href={reservationUrl}
+          target="_blank"
+          rel="noreferrer"
+          onClick={handleAffiliateClick("reservation", reservationUrl)}
+          className="rounded-3xl border border-border bg-surface px-4 py-4 text-left transition hover:border-accent/30 hover:bg-white/90"
+        >
+          <p className="text-sm font-semibold">Reserve a table</p>
+          <p className="mt-1 text-sm text-muted">
+            Search reservation partners for {restaurant.name}.
+          </p>
+        </a>
+      </div>
+    </section>
   );
 }
 
@@ -257,6 +325,8 @@ export default function RestaurantDetailPage() {
           </span>
         </div>
       </div>
+
+      <AffiliateActions restaurant={restaurant} />
 
       <div className="mt-8">
         <div className="flex items-center justify-between">

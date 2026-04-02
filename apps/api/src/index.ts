@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import { env } from "./config/env.js";
 import { prisma } from "./lib/prisma.js";
+import { affiliateRouter } from "./routes/affiliate.js";
 import { authRouter } from "./routes/auth.js";
 import { recommendationsRouter } from "./routes/recommendations.js";
 import { restaurantsRouter } from "./routes/restaurants.js";
@@ -20,6 +21,7 @@ app.use(
 app.use(express.json({ limit: "16kb" }));
 app.use(cookieParser());
 
+app.use("/affiliate", affiliateRouter);
 app.use("/auth", authRouter);
 app.use("/recommendations", recommendationsRouter);
 app.use("/restaurants", restaurantsRouter);

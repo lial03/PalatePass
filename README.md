@@ -116,11 +116,13 @@ PalatePass solves this by making discovery social, personalized, and shareable.
 - User profile page: public stats, favorite cuisines, follow/unfollow, own-profile detection
 - Taste Match: compatibility score between users based on shared restaurants, cuisines, and tags
 - QR sharing: profile QR and review QR with copyable links
+- Affiliate partnerships: clearly labeled delivery/reservation links with click tracking hooks
 - API hardening: cookie-based auth with CORS credentials and 16kb JSON body limit
 
 ### Up next
 
-- Affiliate partnerships (delivery and reservations)
+- Sponsored placements for featured restaurants
+- Restaurant analytics groundwork
 
 ## Competitive Advantage
 

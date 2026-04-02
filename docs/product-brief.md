@@ -138,6 +138,7 @@ PalatePass differentiates with trust-first social discovery, taste matching, and
 - Taste Match is implemented as a user-to-user compatibility score based on shared restaurants, cuisines, and tags.
 - Authentication is hardened with httpOnly cookies, JWT expiry handling, and inactivity logout.
 - QR sharing is implemented for public profiles and individual reviews.
+- Affiliate partnerships MVP is implemented with clearly labeled delivery and reservation links plus click tracking hooks.
 
 ## Expansion Ideas
 
