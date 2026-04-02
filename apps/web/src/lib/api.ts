@@ -18,7 +18,11 @@ export type Restaurant = {
   name: string;
   address: string;
   city: string;
+  countryCode: string | null;
+  countryName: string | null;
   cuisine: string;
+  googlePlaceId: string | null;
+  submissionNotes: string | null;
   lat: number | null;
   lng: number | null;
   createdBy: string;
@@ -32,6 +36,10 @@ export type RatingSummary = {
   id: string;
   score: number;
   notes: string | null;
+  photoUrls: string[];
+  budgetTier: "budget" | "mid" | "premium" | "luxury" | null;
+  budgetAmount: number | null;
+  budgetCurrency: string | null;
   tags: string[];
   userId: string;
   restaurantId: string;
@@ -143,11 +151,35 @@ export const api = {
       apiFetch<{ restaurant: RestaurantDetail; ratings: RatingSummary[] }>(
         `/restaurants/${id}`,
       ),
+    create: (body: {
+      name: string;
+      address: string;
+      city: string;
+      countryCode: string;
+      countryName: string;
+      cuisine: string;
+      googlePlaceId?: string;
+      submissionNotes?: string;
+      lat?: number;
+      lng?: number;
+    }) =>
+      apiFetch<{ restaurant: Restaurant }>("/restaurants", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
     analytics: (id: string) =>
       apiFetch<{ analytics: RestaurantAnalytics }>(`/restaurants/${id}/analytics`),
     rate: (
       id: string,
-      body: { score: number; notes?: string; tags?: string[] },
+      body: {
+        score: number;
+        notes?: string;
+        tags?: string[];
+        photoUrls?: string[];
+        budgetTier?: "budget" | "mid" | "premium" | "luxury";
+        budgetAmount?: number;
+        budgetCurrency?: string;
+      },
     ) =>
       apiFetch<{ rating: RatingSummary }>(`/restaurants/${id}/ratings`, {
         method: "POST",

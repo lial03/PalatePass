@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 import { api, type Restaurant } from "../../lib/api";
 
 function ScoreBadge({ score }: { score: number | null }) {
@@ -18,7 +19,158 @@ function ScoreBadge({ score }: { score: number | null }) {
   );
 }
 
+function AddRestaurantForm({ onCreated }: { onCreated: () => void }) {
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [countryCode, setCountryCode] = useState("");
+  const [countryName, setCountryName] = useState("");
+  const [cuisine, setCuisine] = useState("");
+  const [googlePlaceId, setGooglePlaceId] = useState("");
+  const [lat, setLat] = useState("");
+  const [lng, setLng] = useState("");
+  const [submissionNotes, setSubmissionNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    try {
+      await api.restaurants.create({
+        name,
+        address,
+        city,
+        countryCode,
+        countryName,
+        cuisine,
+        googlePlaceId: googlePlaceId || undefined,
+        submissionNotes: submissionNotes || undefined,
+        lat: lat ? Number(lat) : undefined,
+        lng: lng ? Number(lng) : undefined,
+      });
+      setName("");
+      setAddress("");
+      setCity("");
+      setCountryCode("");
+      setCountryName("");
+      setCuisine("");
+      setGooglePlaceId("");
+      setLat("");
+      setLng("");
+      setSubmissionNotes("");
+      onCreated();
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Failed to add restaurant",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="mt-6 rounded-4xl border border-border bg-surface p-5"
+    >
+      <h2 className="font-serif text-2xl">Add A Restaurant</h2>
+      <p className="mt-1 text-sm text-muted">
+        Pin with Google Place ID if available, or add manually.
+      </p>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <input
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          placeholder="Restaurant name"
+          required
+          className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
+        />
+        <input
+          value={cuisine}
+          onChange={(event) => setCuisine(event.target.value)}
+          placeholder="Cuisine"
+          required
+          className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
+        />
+        <input
+          value={address}
+          onChange={(event) => setAddress(event.target.value)}
+          placeholder="Address"
+          required
+          className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2 sm:col-span-2"
+        />
+        <input
+          value={city}
+          onChange={(event) => setCity(event.target.value)}
+          placeholder="City"
+          required
+          className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
+        />
+        <input
+          value={countryName}
+          onChange={(event) => setCountryName(event.target.value)}
+          placeholder="Country"
+          required
+          className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
+        />
+        <input
+          value={countryCode}
+          onChange={(event) => setCountryCode(event.target.value.toUpperCase())}
+          placeholder="Country code (e.g. NG)"
+          required
+          maxLength={2}
+          className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm uppercase outline-none ring-accent focus:ring-2"
+        />
+        <input
+          value={googlePlaceId}
+          onChange={(event) => setGooglePlaceId(event.target.value)}
+          placeholder="Google Place ID (optional)"
+          className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
+        />
+        <input
+          value={lat}
+          onChange={(event) => setLat(event.target.value)}
+          placeholder="Latitude (optional)"
+          inputMode="decimal"
+          className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
+        />
+        <input
+          value={lng}
+          onChange={(event) => setLng(event.target.value)}
+          placeholder="Longitude (optional)"
+          inputMode="decimal"
+          className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
+        />
+      </div>
+
+      <textarea
+        value={submissionNotes}
+        onChange={(event) => setSubmissionNotes(event.target.value)}
+        rows={3}
+        placeholder="Submission notes (optional)"
+        className="mt-3 w-full rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
+      />
+
+      {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+
+      <button
+        type="submit"
+        disabled={submitting}
+        className="mt-3 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-accent-strong disabled:opacity-60"
+      >
+        {submitting ? "Adding..." : "Add restaurant"}
+      </button>
+    </form>
+  );
+}
+
 export default function RestaurantsPage() {
+  const { user, ready } = useAuth();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [total, setTotal] = useState(0);
   const [cuisine, setCuisine] = useState("");
@@ -106,6 +258,18 @@ export default function RestaurantsPage() {
           )}
         </form>
       </div>
+
+      {ready && user && (
+        <AddRestaurantForm
+          onCreated={() => void fetchRestaurants(cuisine, city)}
+        />
+      )}
+      {ready && !user && (
+        <div className="mt-6 rounded-3xl border border-border bg-surface px-5 py-4 text-sm text-muted">
+          Log in to add restaurants, include photos and budget tags in your
+          ratings, and grow your taste graph.
+        </div>
+      )}
 
       {error && (
         <div className="mb-6 rounded-2xl bg-red-50 px-5 py-4 text-sm text-red-700">

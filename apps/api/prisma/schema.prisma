@@ -28,7 +28,11 @@ model Restaurant {
   name      String
   address   String
   city      String
+  countryCode String?
+  countryName String?
   cuisine   String
+  googlePlaceId String?
+  submissionNotes String?
   lat       Float?
   lng       Float?
   createdBy String
@@ -43,6 +47,10 @@ model Rating {
   id           String     @id @default(cuid())
   score        Int
   notes        String?
+  photoUrls    String[]   @default([])
+  budgetTier   String?
+  budgetAmount Int?
+  budgetCurrency String?
   userId       String
   restaurantId String
   createdAt    DateTime   @default(now())

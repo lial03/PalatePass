@@ -46,7 +46,11 @@ const sampleRestaurant = {
   name: "Bella Cucina",
   address: "12 Olive St",
   city: "London",
+  countryCode: "GB",
+  countryName: "United Kingdom",
   cuisine: "Italian",
+  googlePlaceId: null,
+  submissionNotes: null,
   lat: 51.5,
   lng: -0.12,
   createdBy: "user_1",
@@ -109,6 +113,8 @@ describe("restaurants routes", () => {
         name: "Bella Cucina",
         address: "12 Olive St",
         city: "London",
+        countryCode: "GB",
+        countryName: "United Kingdom",
         cuisine: "Italian",
         lat: 51.5,
         lng: -0.12,
@@ -121,7 +127,7 @@ describe("restaurants routes", () => {
   it("returns 401 creating a restaurant without auth", async () => {
     const res = await request(makeTestApp())
       .post("/restaurants")
-      .send({ name: "X", address: "Y", city: "Z", cuisine: "Any" });
+      .send({ name: "X", address: "Y", city: "Z", countryCode: "GB", countryName: "United Kingdom", cuisine: "Any" });
 
     expect(res.status).toBe(401);
   });
@@ -145,6 +151,10 @@ describe("restaurants routes", () => {
           id: "rating_1",
           score: 5,
           notes: "Amazing!",
+          photoUrls: [],
+          budgetTier: null,
+          budgetAmount: null,
+          budgetCurrency: null,
           userId: "user_1",
           createdAt: now,
           user: { displayName: "Alice" },
@@ -220,6 +230,10 @@ describe("restaurants routes", () => {
       id: "rating_1",
       score: 4,
       notes: "Loved it",
+      photoUrls: ["https://img.example.com/pasta.jpg"],
+      budgetTier: "mid",
+      budgetAmount: 35,
+      budgetCurrency: "GBP",
       userId: "user_1",
       restaurantId: "rest_1",
       createdAt: now,
@@ -230,7 +244,15 @@ describe("restaurants routes", () => {
     const res = await request(makeTestApp())
       .post("/restaurants/rest_1/ratings")
       .set("Authorization", `Bearer ${token}`)
-      .send({ score: 4, notes: "Loved it", tags: ["cozy"] });
+      .send({
+        score: 4,
+        notes: "Loved it",
+        tags: ["cozy"],
+        photoUrls: ["https://img.example.com/pasta.jpg"],
+        budgetTier: "mid",
+        budgetAmount: 35,
+        budgetCurrency: "GBP",
+      });
 
     expect(res.status).toBe(201);
     expect(res.body.rating.score).toBe(4);
@@ -250,6 +272,10 @@ describe("restaurants routes", () => {
       id: "rating_1",
       score: 5,
       notes: "Even better!",
+      photoUrls: [],
+      budgetTier: null,
+      budgetAmount: null,
+      budgetCurrency: null,
       userId: "user_1",
       restaurantId: "rest_1",
       createdAt: now,

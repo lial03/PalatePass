@@ -69,6 +69,30 @@ function RatingCard({
           ))}
         </div>
       )}
+      {(rating.budgetTier ||
+        (rating.budgetAmount !== null && rating.budgetCurrency)) && (
+        <p className="mt-3 text-xs text-muted">
+          Budget: {rating.budgetTier ?? "custom"}
+          {rating.budgetAmount !== null && rating.budgetCurrency
+            ? ` (${rating.budgetAmount} ${rating.budgetCurrency})`
+            : ""}
+        </p>
+      )}
+      {rating.photoUrls.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {rating.photoUrls.map((url, index) => (
+            <a
+              key={`${rating.id}-${index}`}
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted hover:border-accent/30"
+            >
+              Photo {index + 1}
+            </a>
+          ))}
+        </div>
+      )}
       {showShare && (
         <div className="mt-4">
           <ShareQr
@@ -159,6 +183,12 @@ function RateForm({
   const [score, setScore] = useState(5);
   const [notes, setNotes] = useState("");
   const [tags, setTags] = useState("");
+  const [photoUrls, setPhotoUrls] = useState("");
+  const [budgetTier, setBudgetTier] = useState<
+    "" | "budget" | "mid" | "premium" | "luxury"
+  >("");
+  const [budgetAmount, setBudgetAmount] = useState("");
+  const [budgetCurrency, setBudgetCurrency] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -174,6 +204,15 @@ function RateForm({
           .split(",")
           .map((t) => t.trim())
           .filter(Boolean),
+        photoUrls: photoUrls
+          .split("\n")
+          .map((url) => url.trim())
+          .filter(Boolean),
+        budgetTier: budgetTier || undefined,
+        budgetAmount: budgetAmount ? Number(budgetAmount) : undefined,
+        budgetCurrency: budgetCurrency
+          ? budgetCurrency.toUpperCase()
+          : undefined,
       });
       onSuccess();
     } catch (err) {
@@ -215,6 +254,46 @@ function RateForm({
         onChange={(e) => setTags(e.target.value)}
         className="mt-2 w-full rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
       />
+      <textarea
+        placeholder="Photo URLs, one per line (optional)"
+        value={photoUrls}
+        onChange={(e) => setPhotoUrls(e.target.value)}
+        rows={3}
+        className="mt-2 w-full rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
+      />
+      <div className="mt-2 grid gap-2 sm:grid-cols-3">
+        <select
+          value={budgetTier}
+          onChange={(e) =>
+            setBudgetTier(
+              e.target.value as "" | "budget" | "mid" | "premium" | "luxury",
+            )
+          }
+          className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
+        >
+          <option value="">Budget tier (optional)</option>
+          <option value="budget">Budget</option>
+          <option value="mid">Mid</option>
+          <option value="premium">Premium</option>
+          <option value="luxury">Luxury</option>
+        </select>
+        <input
+          type="number"
+          min={0}
+          placeholder="Amount"
+          value={budgetAmount}
+          onChange={(e) => setBudgetAmount(e.target.value)}
+          className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
+        />
+        <input
+          type="text"
+          maxLength={3}
+          placeholder="Currency (USD)"
+          value={budgetCurrency}
+          onChange={(e) => setBudgetCurrency(e.target.value.toUpperCase())}
+          className="rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm uppercase outline-none ring-accent focus:ring-2"
+        />
+      </div>
       {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
       <button
         type="submit"
