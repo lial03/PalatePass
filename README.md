@@ -115,11 +115,11 @@ PalatePass solves this by making discovery social, personalized, and shareable.
 - Session security: httpOnly auth cookie, JWT expiry detection, 15-min inactivity auto-logout
 - User profile page: public stats, favorite cuisines, follow/unfollow, own-profile detection
 - Taste Match: compatibility score between users based on shared restaurants, cuisines, and tags
+- QR sharing: profile QR and review QR with copyable links
 - API hardening: cookie-based auth with CORS credentials and 16kb JSON body limit
 
 ### Up next
 
-- QR code sharing for profiles and reviews
 - Affiliate partnerships (delivery and reservations)
 
 ## Competitive Advantage

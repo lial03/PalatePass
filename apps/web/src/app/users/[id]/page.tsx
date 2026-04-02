@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ShareQr } from "../../../components/ShareQr";
 import { useAuth } from "../../../context/AuthContext";
 import { api, type UserProfile } from "../../../lib/api";
 
@@ -207,6 +208,16 @@ export default function UserProfilePage() {
           </div>
         )}
       </section>
+
+      {isOwnProfile && (
+        <section className="mt-6">
+          <ShareQr
+            title="Share your profile"
+            description="Let people scan this QR code to open your public profile, follow you, and see your taste stats."
+            path={`/users/${id}`}
+          />
+        </section>
+      )}
     </main>
   );
 }
