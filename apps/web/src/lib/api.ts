@@ -55,6 +55,8 @@ export type Recommendation = {
   sampleNotes: string[];
 };
 
+export type AffiliatePartner = "delivery" | "reservation";
+
 export type UserProfile = {
   id: string;
   displayName: string;
@@ -145,6 +147,19 @@ export const api = {
         data: Recommendation[];
         meta: { followingCount: number; candidateRatings: number; limit: number };
       }>(`/recommendations/feed?limit=${limit}`),
+  },
+  affiliate: {
+    trackClick: (body: {
+      restaurantId: string;
+      partner: AffiliatePartner;
+      destination: string;
+      context?: string;
+    }) =>
+      apiFetch<void>("/affiliate/click", {
+        method: "POST",
+        body: JSON.stringify(body),
+        keepalive: true,
+      }),
   },
   users: {
     profile: (id: string) => apiFetch<{ profile: UserProfile }>(`/users/${id}`),
