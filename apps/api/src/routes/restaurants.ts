@@ -180,7 +180,7 @@ restaurantsRouter.get("/:id/analytics", async (request, response) => {
   const ratingCount = rows.length;
   const averageScore =
     ratingCount > 0
-      ? Math.round((rows.reduce((sum, row) => sum + row.score, 0) / ratingCount) * 10) / 10
+      ? Math.round((rows.reduce((sum: number, row: { score: number }) => sum + row.score, 0) / ratingCount) * 10) / 10
       : null;
 
   const now = Date.now();
