@@ -13,12 +13,14 @@ const { mockPrisma } = vi.hoisted(() => ({
       findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      delete: vi.fn(),
     },
     rating: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      deleteMany: vi.fn(),
     },
     tag: {
       upsert: vi.fn(),
@@ -66,10 +68,12 @@ describe("restaurants routes", () => {
     mockPrisma.restaurant.findUnique.mockReset();
     mockPrisma.restaurant.create.mockReset();
     mockPrisma.restaurant.update.mockReset();
+    mockPrisma.restaurant.delete.mockReset();
     mockPrisma.rating.findMany.mockReset();
     mockPrisma.rating.findUnique.mockReset();
     mockPrisma.rating.create.mockReset();
     mockPrisma.rating.update.mockReset();
+    mockPrisma.rating.deleteMany.mockReset();
     mockPrisma.tag.upsert.mockReset();
   });
 
@@ -332,33 +336,77 @@ describe("restaurants routes", () => {
     expect(res.status).toBe(401);
   });
 
-  // --- PATCH /restaurants/:id/sponsored ---
+  // --- PATCH /restaurants/:id ---
 
-  it("toggles sponsored status when authenticated", async () => {
-    mockPrisma.restaurant.findUnique.mockResolvedValueOnce({ ...sampleRestaurant, sponsored: false });
-    mockPrisma.restaurant.update.mockResolvedValueOnce({ ...sampleRestaurant, sponsored: true });
+  it("updates a restaurant when authenticated as creator", async () => {
+    mockPrisma.restaurant.findUnique.mockResolvedValueOnce({ ...sampleRestaurant });
+    mockPrisma.restaurant.update.mockResolvedValueOnce({ ...sampleRestaurant, name: "New Name" });
 
     const res = await request(makeTestApp())
-      .patch("/restaurants/rest_1/sponsored")
-      .set("Authorization", `Bearer ${token}`);
+      .patch("/restaurants/rest_1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "New Name" });
 
     expect(res.status).toBe(200);
-    expect(res.body.restaurant.sponsored).toBe(true);
+    expect(res.body.restaurant.name).toBe("New Name");
   });
 
-  it("returns 404 toggling sponsored for unknown restaurant", async () => {
-    mockPrisma.restaurant.findUnique.mockResolvedValueOnce(null);
+  it("returns 403 updating a restaurant as non-creator", async () => {
+    mockPrisma.restaurant.findUnique.mockResolvedValueOnce({ ...sampleRestaurant, createdBy: "other_user" });
 
     const res = await request(makeTestApp())
-      .patch("/restaurants/bad-id/sponsored")
+      .patch("/restaurants/rest_1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "Hacker Cuisine" });
+
+    expect(res.status).toBe(403);
+  });
+
+  it("returns 401 updating without auth", async () => {
+    const res = await request(makeTestApp())
+      .patch("/restaurants/rest_1")
+      .send({ name: "Ghost Edit" });
+
+    expect(res.status).toBe(401);
+  });
+
+  // --- DELETE /restaurants/:id ---
+
+  it("deletes a restaurant when authenticated as creator", async () => {
+    mockPrisma.restaurant.findUnique.mockResolvedValueOnce({ ...sampleRestaurant });
+    mockPrisma.restaurant.delete.mockResolvedValueOnce(sampleRestaurant);
+
+    const res = await request(makeTestApp())
+      .delete("/restaurants/rest_1")
       .set("Authorization", `Bearer ${token}`);
 
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
-  it("returns 401 toggling sponsored without auth", async () => {
+  it("returns 403 deleting a restaurant as non-creator", async () => {
+    mockPrisma.restaurant.findUnique.mockResolvedValueOnce({ ...sampleRestaurant, createdBy: "other_user" });
+
     const res = await request(makeTestApp())
-      .patch("/restaurants/rest_1/sponsored");
+      .delete("/restaurants/rest_1")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(403);
+  });
+
+  // --- DELETE /restaurants/:id/ratings ---
+
+  it("retracts personal rating when authenticated", async () => {
+    const res = await request(makeTestApp())
+      .delete("/restaurants/rest_1/ratings")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(204);
+    expect(mockPrisma.rating.deleteMany).toHaveBeenCalled();
+  });
+
+  it("returns 401 retracting rating without auth", async () => {
+    const res = await request(makeTestApp())
+      .delete("/restaurants/rest_1/ratings");
 
     expect(res.status).toBe(401);
   });

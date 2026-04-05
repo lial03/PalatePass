@@ -35,6 +35,7 @@ const createRestaurantSchema = z.object({
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
   placeId: z.string().optional(),
+  sponsored: z.boolean().optional(),
 });
 
 const createRatingSchema = z.object({
