@@ -24,32 +24,35 @@ model User {
 }
 
 model Restaurant {
-  id        String   @id @default(cuid())
-  name      String
-  address   String
-  city      String
-  countryCode String?
-  countryName String?
-  cuisine   String
-  googlePlaceId String?
+  id              String   @id @default(cuid())
+  name            String
+  address         String
+  city            String
+  country         String?
+  countryCode     String?
+  countryName     String?
+  cuisine         String
+  googlePlaceId   String?
+  placeId         String?
   submissionNotes String?
-  lat       Float?
-  lng       Float?
-  createdBy String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  sponsored Boolean  @default(false)
-  creator   User     @relation(fields: [createdBy], references: [id])
-  ratings   Rating[]
+  lat             Float?
+  lng             Float?
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  sponsored       Boolean  @default(false)
+  creator         User     @relation(fields: [createdBy], references: [id])
+  ratings         Rating[]
 }
 
 model Rating {
   id           String     @id @default(cuid())
   score        Int
   notes        String?
-  photoUrls    String[]   @default([])
-  budgetTier   String?
-  budgetAmount Int?
+  photoUrls      String[]   @default([])
+  images         String[]   @default([])
+  budgetTier     String?
+  budgetAmount   Int?
   budgetCurrency String?
   userId       String
   restaurantId String

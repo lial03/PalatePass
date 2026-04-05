@@ -1,8 +1,12 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import Script from "next/script";
+import { LocationMap } from "../../../components/Map";
 import { ShareQr } from "../../../components/ShareQr";
 import { useAuth } from "../../../context/AuthContext";
 import { buildAffiliateUrl, trackAffiliateClick } from "../../../lib/affiliate";
@@ -92,6 +96,13 @@ function RatingCard({
             </a>
           ))}
         </div>
+      )}
+      {rating.images && rating.images.length > 0 && (
+         <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+            {rating.images.map(img => (
+               <img key={img} src={img} alt="Review" className="h-24 w-24 object-cover rounded-2xl" />
+            ))}
+         </div>
       )}
       {showShare && (
         <div className="mt-4">
@@ -183,6 +194,7 @@ function RateForm({
   const [score, setScore] = useState(5);
   const [notes, setNotes] = useState("");
   const [tags, setTags] = useState("");
+  const [images, setImages] = useState("");
   const [photoUrls, setPhotoUrls] = useState("");
   const [budgetTier, setBudgetTier] = useState<
     "" | "budget" | "mid" | "premium" | "luxury"
@@ -203,6 +215,10 @@ function RateForm({
         tags: tags
           .split(",")
           .map((t) => t.trim())
+          .filter(Boolean),
+        images: images
+          .split(",")
+          .map(i => i.trim())
           .filter(Boolean),
         photoUrls: photoUrls
           .split("\n")
@@ -254,6 +270,35 @@ function RateForm({
         onChange={(e) => setTags(e.target.value)}
         className="mt-2 w-full rounded-2xl border border-border bg-white/70 px-4 py-2.5 text-sm outline-none ring-accent focus:ring-2"
       />
+        <div className="mt-2 w-full rounded-2xl border border-border bg-surface px-4 py-3 flex items-center justify-between">
+          <span className="text-sm text-foreground truncate max-w-[60%]">
+            {images ? `${images.split(",").length} image(s) attached` : "No images"}
+          </span>
+          <button 
+            type="button" 
+            onClick={(e) => { 
+              e.preventDefault();
+              if (typeof window !== "undefined" && (window as any).cloudinary) {
+                const widget = (window as any).cloudinary.createUploadWidget({
+                  cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "demo",
+                  uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "palatepass_unsigned",
+                  sources: ["local", "url", "camera"],
+                  multiple: true
+                }, (error: any, result: any) => {
+                  if (!error && result && result.event === "success") {
+                    setImages((prev: string) => prev ? `${prev},${result.info.secure_url}` : result.info.secure_url);
+                  }
+                });
+                widget.open();
+              } else {
+                alert("Cloudinary module is initializing, please try again in a moment.");
+              }
+            }} 
+            className="text-sm font-semibold text-accent hover:underline"
+          >
+            Upload Photo
+          </button>
+        </div>
       <textarea
         placeholder="Photo URLs, one per line (optional)"
         value={photoUrls}
@@ -376,6 +421,8 @@ export default function RestaurantDetailPage() {
       : null;
 
   return (
+    <>
+    <Script src="https://upload-widget.cloudinary.com/global/all.js" strategy="lazyOnload" />
     <main className="mx-auto max-w-3xl px-6 py-10 sm:px-10">
       <Link
         href="/restaurants"
@@ -399,6 +446,12 @@ export default function RestaurantDetailPage() {
         <p className="mt-1 text-sm text-muted">
           {restaurant.address}, {restaurant.city}
         </p>
+
+        {restaurant.lat !== null && restaurant.lng !== null && (
+          <div className="mt-6 mb-4 h-[300px] w-full">
+             <LocationMap markers={[{ id: restaurant.id, lat: restaurant.lat as number, lng: restaurant.lng as number, title: restaurant.name }]} />
+          </div>
+        )}
 
         <div className="mt-4 flex items-center gap-4">
           {avg !== null && (
@@ -536,5 +589,6 @@ export default function RestaurantDetailPage() {
         )}
       </div>
     </main>
+    </>
   );
 }

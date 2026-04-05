@@ -11,6 +11,22 @@ const updateProfileSchema = z.object({
   avatarUrl: z.string().url().max(500).optional(),
 });
 
+usersRouter.get("/search", async (request, response) => {
+  const q = typeof request.query.q === "string" ? request.query.q : "";
+  if (!q) {
+    response.json({ data: [] });
+    return;
+  }
+
+  const users = await prisma.user.findMany({
+    where: { displayName: { contains: q, mode: "insensitive" } },
+    select: { id: true, displayName: true, avatarUrl: true, bio: true },
+    take: 20,
+  });
+
+  response.json({ data: users });
+});
+
 usersRouter.get("/:id", async (request, response) => {
   const user = await prisma.user.findUnique({
     where: { id: request.params.id },

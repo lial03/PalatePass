@@ -51,20 +51,11 @@ recommendationsRouter.get(
 
     const followingIds = follows.map((f: { followingId: string }) => f.followingId);
 
-    if (followingIds.length === 0) {
-      response.json({
-        data: [],
-        meta: {
-          reason: "Follow users to unlock recommendations",
-          followingCount: 0,
-        },
-      });
-      return;
-    }
-
     const networkRatings = (await prisma.rating.findMany({
-      where: {
+      where: followingIds.length > 0 ? {
         userId: { in: followingIds },
+        score: { gte: 4 },
+      } : {
         score: { gte: 4 },
       },
       include: {

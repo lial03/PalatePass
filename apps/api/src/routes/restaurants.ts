@@ -26,13 +26,15 @@ const createRestaurantSchema = z.object({
   name: z.string().min(1).max(120),
   address: z.string().min(1),
   city: z.string().min(1).max(80),
-  countryCode: z.string().trim().length(2).transform((value) => value.toUpperCase()),
-  countryName: z.string().min(2).max(80),
+  country: z.string().optional(),
+  countryCode: z.string().max(5).optional(),
+  countryName: z.string().min(2).max(80).optional(),
   cuisine: z.string().min(1).max(60),
   googlePlaceId: z.string().max(180).optional(),
   submissionNotes: z.string().max(600).optional(),
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
+  placeId: z.string().optional(),
 });
 
 const createRatingSchema = z.object({
@@ -40,6 +42,7 @@ const createRatingSchema = z.object({
   notes: z.string().max(1000).optional(),
   tags: z.array(z.string().min(1).max(40)).max(10).default([]),
   photoUrls: z.array(z.string().url().max(500)).max(8).default([]),
+  images: z.array(z.string().url()).max(5).default([]),
   budgetTier: z.enum(["budget", "mid", "premium", "luxury"]).optional(),
   budgetAmount: z.number().int().min(0).max(1_000_000).optional(),
   budgetCurrency: z.string().trim().length(3).transform((value) => value.toUpperCase()).optional(),
@@ -59,7 +62,7 @@ const createRatingSchema = z.object({
 restaurantsRouter.get("/", async (request, response) => {
   const cuisine = typeof request.query.cuisine === "string" ? request.query.cuisine : undefined;
   const city = typeof request.query.city === "string" ? request.query.city : undefined;
-  const query = typeof request.query.query === "string" ? request.query.query.trim() : undefined;
+  const query = typeof request.query.query === "string" ? request.query.query.trim() : typeof request.query.q === "string" ? request.query.q : undefined;
   const countryCode = typeof request.query.countryCode === "string"
     ? request.query.countryCode.trim().toUpperCase()
     : undefined;
@@ -294,7 +297,7 @@ restaurantsRouter.post(
       return;
     }
 
-    const { score, notes, tags, photoUrls, budgetTier, budgetAmount, budgetCurrency } = parsed.data;
+    const { score, notes, tags, photoUrls, images, budgetTier, budgetAmount, budgetCurrency } = parsed.data;
     const userId = request.authUser!.id;
     const restaurantId = restaurant.id;
 
@@ -323,6 +326,7 @@ restaurantsRouter.post(
           score,
           notes: notes ?? null,
           photoUrls,
+          images: { set: images },
           budgetTier: budgetTier ?? null,
           budgetAmount: budgetAmount ?? null,
           budgetCurrency: budgetCurrency ?? null,
@@ -336,6 +340,7 @@ restaurantsRouter.post(
           score,
           notes: notes ?? null,
           photoUrls,
+          images: { set: images },
           budgetTier: budgetTier ?? null,
           budgetAmount: budgetAmount ?? null,
           budgetCurrency: budgetCurrency ?? null,
@@ -353,6 +358,7 @@ restaurantsRouter.post(
         score: rating.score,
         notes: rating.notes,
         photoUrls: (rating as unknown as { photoUrls: string[] }).photoUrls,
+        images: (rating as any).images || [],
         budgetTier: (rating as unknown as { budgetTier: string | null }).budgetTier,
         budgetAmount: (rating as unknown as { budgetAmount: number | null }).budgetAmount,
         budgetCurrency: (rating as unknown as { budgetCurrency: string | null }).budgetCurrency,

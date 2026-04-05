@@ -41,6 +41,7 @@ export type RatingSummary = {
   budgetAmount: number | null;
   budgetCurrency: string | null;
   tags: string[];
+  images?: string[];
   userId: string;
   restaurantId: string;
   displayName: string;
@@ -132,6 +133,7 @@ export const api = {
       cuisine?: string;
       city?: string;
       query?: string;
+      q?: string;
       countryCode?: string;
       page?: number;
       limit?: number;
@@ -140,6 +142,7 @@ export const api = {
       if (params?.cuisine) qs.set("cuisine", params.cuisine);
       if (params?.city) qs.set("city", params.city);
       if (params?.query) qs.set("query", params.query);
+      if (params?.q) qs.set("q", params.q);
       if (params?.countryCode) qs.set("countryCode", params.countryCode);
       if (params?.page) qs.set("page", String(params.page));
       if (params?.limit) qs.set("limit", String(params.limit));
@@ -151,26 +154,28 @@ export const api = {
         limit: number;
       }>(`/restaurants${query ? `?${query}` : ""}`);
     },
-    get: (id: string) =>
-      apiFetch<{ restaurant: RestaurantDetail; ratings: RatingSummary[] }>(
-        `/restaurants/${id}`,
-      ),
     create: (body: {
       name: string;
       address: string;
       city: string;
-      countryCode: string;
-      countryName: string;
+      country?: string;
+      countryCode?: string;
+      countryName?: string;
       cuisine: string;
       googlePlaceId?: string;
       submissionNotes?: string;
       lat?: number;
       lng?: number;
+      placeId?: string;
     }) =>
       apiFetch<{ restaurant: Restaurant }>("/restaurants", {
         method: "POST",
         body: JSON.stringify(body),
       }),
+    get: (id: string) =>
+      apiFetch<{ restaurant: RestaurantDetail; ratings: RatingSummary[] }>(
+        `/restaurants/${id}`,
+      ),
     analytics: (id: string) =>
       apiFetch<{ analytics: RestaurantAnalytics }>(`/restaurants/${id}/analytics`),
     rate: (
@@ -180,6 +185,7 @@ export const api = {
         notes?: string;
         tags?: string[];
         photoUrls?: string[];
+        images?: string[];
         budgetTier?: "budget" | "mid" | "premium" | "luxury";
         budgetAmount?: number;
         budgetCurrency?: string;
