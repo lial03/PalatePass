@@ -161,6 +161,42 @@ usersRouter.post("/:id/follow", requireAuth, async (request: AuthenticatedReques
   response.status(201).json({ message: "Followed user" });
 });
 
+// GET /users/:id/followers - Get list of followers
+usersRouter.get("/:id/followers", async (request, response) => {
+  const userId = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id;
+  
+  const follows = await prisma.follow.findMany({
+    where: { followingId: userId },
+    include: {
+      follower: {
+        select: { id: true, displayName: true, avatarUrl: true, bio: true }
+      }
+    },
+    orderBy: { createdAt: "desc" }
+  });
+
+  const data = follows.map(f => f.follower);
+  response.json({ data });
+});
+
+// GET /users/:id/following - Get list of users being followed
+usersRouter.get("/:id/following", async (request, response) => {
+  const userId = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id;
+
+  const follows = await prisma.follow.findMany({
+    where: { followerId: userId },
+    include: {
+      following: {
+        select: { id: true, displayName: true, avatarUrl: true, bio: true }
+      }
+    },
+    orderBy: { createdAt: "desc" }
+  });
+
+  const data = follows.map(f => f.following);
+  response.json({ data });
+});
+
 usersRouter.delete("/:id/follow", requireAuth, async (request: AuthenticatedRequest, response) => {
   const followerId = request.authUser!.id;
   const followingId = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id;

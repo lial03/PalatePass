@@ -240,6 +240,33 @@ export const api = {
   },
   users: {
     profile: (id: string) => apiFetch<{ profile: UserProfile }>(`/users/${id}`),
+    search: (q: string) =>
+      apiFetch<{
+        data: Array<{
+          id: string;
+          displayName: string;
+          avatarUrl: string;
+          bio: string | null;
+        }>;
+      }>(`/users/search?q=${encodeURIComponent(q)}`),
+    followers: (id: string) =>
+      apiFetch<{
+        data: Array<{
+          id: string;
+          displayName: string;
+          avatarUrl: string;
+          bio: string | null;
+        }>;
+      }>(`/users/${id}/followers`),
+    following: (id: string) =>
+      apiFetch<{
+        data: Array<{
+          id: string;
+          displayName: string;
+          avatarUrl: string;
+          bio: string | null;
+        }>;
+      }>(`/users/${id}/following`),
     updateMe: (body: { displayName?: string; bio?: string; avatarUrl?: string }) =>
       apiFetch<{ user: ApiUser }>("/users/me", {
         method: "PATCH",
