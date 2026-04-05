@@ -27,7 +27,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${sora.variable} ${newsreader.variable} antialiased`}>
+      <body
+        className={`${sora.variable} ${newsreader.variable} antialiased pt-24 pb-12`}
+      >
         <Providers>
           <NavBar />
           {children}

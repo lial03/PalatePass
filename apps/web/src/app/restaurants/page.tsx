@@ -2,19 +2,32 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Star } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { api, type Restaurant } from "../../lib/api";
 
+// Let's use a simpler unique seed image from picsum for absolute reliability when testing:
+function getPlaceholderImage(id: string) {
+  // Use a pseudo-random hash of the ID to select a beautiful food image from a curated array
+  const mockImages = [
+    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=800&auto=format&fit=crop"
+  ];
+  return mockImages[id.charCodeAt(0) % mockImages.length];
+}
+
 function ScoreBadge({ score }: { score: number | null }) {
   if (score === null)
-    return <span className="text-xs text-muted">No ratings yet</span>;
+    return <span className="text-xs font-semibold text-muted">New</span>;
   return (
-    <span className="inline-flex items-center gap-1 text-sm font-semibold text-accent">
-      {"★".repeat(Math.round(score))}
-      {"☆".repeat(5 - Math.round(score))}
-      <span className="ml-1 text-xs font-normal text-muted">
-        {score.toFixed(1)}
-      </span>
+    <span className="inline-flex items-center gap-1.5 text-sm font-bold text-accent">
+      <Star className="h-4 w-4 fill-accent" />
+      <span>{score.toFixed(1)}</span>
     </span>
   );
 }
@@ -444,48 +457,57 @@ export default function RestaurantsPage() {
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10 sm:px-10">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="font-serif text-4xl">Restaurants</h1>
-          {!loading && (
-            <p className="mt-1 text-sm text-muted">{total} places found</p>
-          )}
-        </div>
+      {/* Sticky Glassmorphic Filter Header */}
+      <div className="sticky top-24 z-40 mb-10 -mx-6 px-6 py-4 backdrop-blur-xl border-b border-border/40 bg-background/60 shadow-[0_10px_30px_rgba(0,0,0,0.05)] sm:-mx-10 sm:px-10">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <h1 className="font-serif text-3xl font-bold">Discover Spots</h1>
+            {!loading && (
+              <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-bold text-accent">
+                {total} Places
+              </span>
+            )}
+          </div>
 
-        <form
-          onSubmit={handleFilter}
-          className="flex flex-wrap items-center gap-2"
-        >
-          <input
-            type="text"
-            placeholder="Cuisine"
-            value={cuisine}
-            onChange={(e) => setCuisine(e.target.value)}
-            className="rounded-full border border-border bg-white/70 px-4 py-2 text-sm outline-none ring-accent focus:ring-2"
-          />
-          <input
-            type="text"
-            placeholder="City"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            className="rounded-full border border-border bg-white/70 px-4 py-2 text-sm outline-none ring-accent focus:ring-2"
-          />
-          <button
-            type="submit"
-            className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent-strong"
+          <form
+            onSubmit={handleFilter}
+            className="flex flex-1 items-center justify-end gap-2"
           >
-            Filter
-          </button>
-          {(cuisine || city) && (
+            <div className="relative group">
+              <input
+                type="text"
+                placeholder="Cuisine"
+                value={cuisine}
+                onChange={(e) => setCuisine(e.target.value)}
+                className="w-32 sm:w-40 rounded-full border border-border/80 bg-white/70 px-4 py-2.5 text-sm outline-none transition-all focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent/20"
+              />
+            </div>
+            <div className="relative group">
+              <input
+                type="text"
+                placeholder="City"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="w-32 sm:w-40 rounded-full border border-border/80 bg-white/70 px-4 py-2.5 text-sm outline-none transition-all focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent/20"
+              />
+            </div>
             <button
-              type="button"
-              onClick={handleReset}
-              className="rounded-full border border-border px-4 py-2 text-sm transition hover:bg-white/60"
+              type="submit"
+              className="rounded-full bg-foreground px-5 py-2.5 text-sm font-bold text-background shadow-md transition hover:bg-black/80"
             >
-              Clear
+              Search
             </button>
-          )}
-        </form>
+            {(cuisine || city) && (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="rounded-full border border-border bg-white px-5 py-2.5 text-sm font-semibold text-muted transition hover:bg-gray-50 hover:text-foreground"
+              >
+                Clear
+              </button>
+            )}
+          </form>
+        </div>
       </div>
 
       {ready && user && (
@@ -523,39 +545,63 @@ export default function RestaurantsPage() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={{
+            visible: { transition: { staggerChildren: 0.1 } },
+            hidden: {}
+          }}
+          className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {restaurants.map((r) => (
-            <Link
+            <motion.div
               key={r.id}
-              href={`/restaurants/${r.id}`}
-              className="group block rounded-3xl border border-border bg-surface p-5 transition hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(70,32,13,0.09)]"
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+              }}
             >
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full border border-border bg-white/80 px-3 py-0.5 text-xs font-medium text-muted">
-                    {r.cuisine}
-                  </span>
-                  {r.sponsored && (
-                    <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-0.5 text-xs font-semibold text-accent">
-                      Sponsored
-                    </span>
-                  )}
+              <Link
+                href={`/restaurants/${r.id}`}
+                className="group relative flex h-[24rem] flex-col justify-end overflow-hidden rounded-[2rem] border border-border/40 bg-surface shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_25px_50px_rgba(192,57,43,0.15)]"
+              >
+                {/* Dynamically mapped Unsplash image placeholder */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                  style={{ backgroundImage: `url(${getPlaceholderImage(r.id)})` }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10 transition-opacity duration-300 group-hover:opacity-90" />
+                
+                <div className="absolute right-4 top-4 z-10 flex">
+                  <div className="flex items-center gap-1 rounded-full bg-white/95 px-3 py-1.5 shadow-md backdrop-blur">
+                    <ScoreBadge score={r.averageScore} />
+                  </div>
                 </div>
-                <span className="text-xs text-muted">{r.city}</span>
-              </div>
-              <h2 className="mt-3 font-serif text-xl font-semibold group-hover:text-accent">
-                {r.name}
-              </h2>
-              <p className="mt-1 text-sm text-muted">{r.address}</p>
-              <div className="mt-3 flex items-center justify-between">
-                <ScoreBadge score={r.averageScore} />
-                <span className="text-xs text-muted">
-                  {r.ratingCount} {r.ratingCount === 1 ? "rating" : "ratings"}
-                </span>
-              </div>
-            </Link>
+                
+                <div className="relative z-10 p-6">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full border border-white/20 bg-black/40 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-widest text-white backdrop-blur-md">
+                      {r.cuisine}
+                    </span>
+                    {r.sponsored && (
+                      <span className="rounded-full border border-accent/40 bg-accent/30 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-widest text-white backdrop-blur-md">
+                        Sponsored
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="mt-4 font-serif text-3xl font-semibold leading-tight text-white transition-colors group-hover:text-[#fdfbfa]">
+                    {r.name}
+                  </h2>
+                  <div className="mt-3 flex items-center justify-between text-xs font-medium text-white/80">
+                    <span className="truncate">{r.address}</span>
+                    <span className="ml-2 shrink-0 rounded-full bg-white/10 px-2 py-1 backdrop-blur-sm">{r.city}</span>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
     </main>
   );

@@ -14,16 +14,16 @@ export function NavBar() {
   }
 
   return (
-    <nav className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 sm:px-10">
+    <nav className="fixed left-0 right-0 top-6 z-50 mx-auto max-w-5xl px-4">
+      <div className="flex items-center justify-between rounded-full border border-border/40 bg-white/70 px-6 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-md transition-all">
         <Link
           href="/"
-          className="font-serif text-xl font-semibold tracking-tight"
+          className="font-serif text-2xl font-bold tracking-tight text-foreground transition-transform hover:scale-105"
         >
           PalatePass
         </Link>
 
-        <div className="flex items-center gap-5 text-sm font-medium">
+        <div className="flex items-center gap-6 text-sm font-medium">
           <Link
             href="/restaurants"
             className="text-muted transition hover:text-foreground"
@@ -65,7 +65,7 @@ export function NavBar() {
               </Link>
               <Link
                 href="/register"
-                className="rounded-full bg-accent px-4 py-1.5 text-white transition hover:bg-accent-strong"
+                className="rounded-full bg-accent px-5 py-2 text-white shadow-md shadow-accent/20 transition-all hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-lg hover:shadow-accent/30"
               >
                 Sign up
               </Link>
