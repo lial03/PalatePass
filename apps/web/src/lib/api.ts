@@ -195,9 +195,27 @@ export const api = {
         method: "POST",
         body: JSON.stringify(body),
       }),
-    toggleSponsored: (id: string) =>
-      apiFetch<{ restaurant: Restaurant }>(`/restaurants/${id}/sponsored`, {
+    update: (id: string, body: Partial<{
+      name: string;
+      address: string;
+      city: string;
+      cuisine: string;
+      countryCode: string;
+      countryName: string;
+      lat: number;
+      lng: number;
+    }>) =>
+      apiFetch<{ restaurant: Restaurant }>(`/restaurants/${id}`, {
         method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    delete: (id: string) =>
+      apiFetch<void>(`/restaurants/${id}`, {
+        method: "DELETE",
+      }),
+    unrate: (id: string) =>
+      apiFetch<void>(`/restaurants/${id}/ratings`, {
+        method: "DELETE",
       }),
   },
   recommendations: {
@@ -234,4 +252,48 @@ export const api = {
     tasteMatch: (id: string) =>
       apiFetch<{ score: number }>(`/users/${id}/taste-match`),
   },
+  lists: {
+    mine: () => apiFetch<{ data: List[] }>("/lists"),
+    userLists: (userId: string) => apiFetch<{ data: List[] }>(`/lists/user/${userId}`),
+    get: (id: string) => apiFetch<{ list: ListDetail }>(`/lists/${id}`),
+    create: (body: { name: string; description?: string; isPublic?: boolean }) =>
+      apiFetch<{ list: List }>("/lists", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    addItem: (listId: string, body: { restaurantId: string; notes?: string }) =>
+      apiFetch<{ item: ListItem }>(`/lists/${listId}/items`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    removeItem: (listId: string, restaurantId: string) =>
+      apiFetch<void>(`/lists/${listId}/items/${restaurantId}`, {
+        method: "DELETE",
+      }),
+  },
+};
+
+export type List = {
+  id: string;
+  name: string;
+  description: string | null;
+  isPublic: boolean;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  _count: { items: number };
+};
+
+export type ListItem = {
+  id: string;
+  listId: string;
+  restaurantId: string;
+  notes: string | null;
+  createdAt: string;
+  restaurant?: Restaurant;
+};
+
+export type ListDetail = List & {
+  user: { id: string; displayName: string };
+  items: ListItem[];
 };

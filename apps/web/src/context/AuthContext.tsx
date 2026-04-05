@@ -16,6 +16,7 @@ type AuthState = { user: ApiUser | null };
 type AuthContextType = AuthState & {
   login: (user: ApiUser, expiresAt: number) => void;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   ready: boolean;
 };
 
@@ -23,6 +24,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   login: () => {},
   logout: () => {},
+  refreshUser: async () => {},
   ready: false,
 });
 
@@ -125,8 +127,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [startTimers],
   );
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const { user } = await api.auth.me();
+      setState({ user });
+      // Update local storage too to keep it in sync
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...parsed, user }));
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, ready }}>
+    <AuthContext.Provider value={{ ...state, login, logout, refreshUser, ready }}>
       {children}
     </AuthContext.Provider>
   );

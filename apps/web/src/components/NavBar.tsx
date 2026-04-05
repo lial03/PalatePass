@@ -46,7 +46,13 @@ export function NavBar() {
                 href={`/users/${user.id}`}
                 className="text-muted transition hover:text-foreground"
               >
-                {user.displayName}
+                Profile
+              </Link>
+              <Link
+                href="/settings"
+                className="text-muted transition hover:text-foreground"
+              >
+                Settings
               </Link>
               <button
                 onClick={handleLogout}

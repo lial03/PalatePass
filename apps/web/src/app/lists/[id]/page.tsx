@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { api } from "../../../lib/api";
-import UserProfileComponent from "./UserProfile";
+import ListDetailComponent from "./ListDetail";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -13,23 +13,24 @@ export async function generateMetadata(
   const id = (await params).id;
 
   try {
-    const { profile } = await api.users.profile(id);
+    const res = await api.lists.get(id);
+    const list = res.list;
     
     return {
-      title: `${profile.displayName} | PalatePass`,
-      description: profile.bio || `Browse ${profile.displayName}'s favorite restaurant collections and culinary discoveries on PalatePass.`,
+      title: `${list.name} | PalatePass Collections`,
+      description: list.description || `Explore this curated collection of ${list.items.length} restaurants by ${list.user.displayName} on PalatePass.`,
       openGraph: {
-        images: [profile.avatarUrl || "/og-user.png"],
+        images: ["/og-collection.png"],
       },
     };
   } catch {
     return {
-      title: "User Profile | PalatePass",
+      title: "Collection | PalatePass",
       description: "Discover trusted restaurant reviews and collections.",
     };
   }
 }
 
 export default function Page() {
-  return <UserProfileComponent />;
+  return <ListDetailComponent />;
 }

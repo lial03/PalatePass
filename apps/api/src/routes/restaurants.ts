@@ -38,7 +38,7 @@ const createRestaurantSchema = z.object({
 });
 
 const createRatingSchema = z.object({
-  score: z.number().int().min(1).max(5),
+  score: z.number().int().min(1).max(10),
   notes: z.string().max(1000).optional(),
   tags: z.array(z.string().min(1).max(40)).max(10).default([]),
   photoUrls: z.array(z.string().url().max(500)).max(8).default([]),
@@ -372,11 +372,15 @@ restaurantsRouter.post(
   },
 );
 
-// PATCH /restaurants/:id/sponsored — toggle sponsored status (auth required)
-restaurantsRouter.patch("/:id/sponsored", requireAuth, async (request: AuthenticatedRequest, response) => {
-  const restaurantIdParam = Array.isArray(request.params.id)
-    ? request.params.id[0]
-    : request.params.id;
+// PATCH /restaurants/:id — update (auth required, creator only)
+restaurantsRouter.patch("/:id", requireAuth, async (request: AuthenticatedRequest, response) => {
+  const parsed = createRestaurantSchema.partial().safeParse(request.body);
+  const restaurantIdParam = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id;
+
+  if (!parsed.success) {
+    response.status(400).json({ message: "Invalid request body", issues: parsed.error.issues });
+    return;
+  }
 
   const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantIdParam } });
 
@@ -385,43 +389,51 @@ restaurantsRouter.patch("/:id/sponsored", requireAuth, async (request: Authentic
     return;
   }
 
-  const currentSponsored = Boolean((restaurant as { sponsored?: boolean }).sponsored);
+  if (restaurant.createdBy !== request.authUser!.id) {
+    response.status(403).json({ message: "Not authorized to update this spot" });
+    return;
+  }
 
-  const updated = await (prisma.restaurant as unknown as {
-    update: (args: {
-      where: { id: string };
-      data: { sponsored: boolean };
-    }) => Promise<{
-      id: string;
-      name: string;
-      address: string;
-      city: string;
-      cuisine: string;
-      lat: number | null;
-      lng: number | null;
-      createdBy: string;
-      createdAt: Date;
-      sponsored: boolean;
-    }>;
-  }).update({
+  const updated = await prisma.restaurant.update({
     where: { id: restaurantIdParam },
-    data: { sponsored: !currentSponsored },
+    data: parsed.data,
   });
 
-  response.json({
-    restaurant: {
-      id: updated.id,
-      name: updated.name,
-      address: updated.address,
-      city: updated.city,
-      cuisine: updated.cuisine,
-      lat: updated.lat,
-      lng: updated.lng,
-      createdBy: updated.createdBy,
-      createdAt: updated.createdAt,
-      sponsored: (updated as unknown as { sponsored: boolean }).sponsored,
+  response.json({ restaurant: updated });
+});
+
+// DELETE /restaurants/:id — delete (auth required, creator only)
+restaurantsRouter.delete("/:id", requireAuth, async (request: AuthenticatedRequest, response) => {
+  const restaurantIdParam = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id;
+  const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantIdParam } });
+
+  if (!restaurant) {
+    response.status(404).json({ message: "Restaurant not found" });
+    return;
+  }
+
+  if (restaurant.createdBy !== request.authUser!.id) {
+    response.status(403).json({ message: "Not authorized to delete this spot" });
+    return;
+  }
+
+  await prisma.restaurant.delete({ where: { id: restaurantIdParam } });
+  response.status(204).end();
+});
+
+// DELETE /restaurants/:id/ratings — retract personal rating (auth required)
+restaurantsRouter.delete("/:id/ratings", requireAuth, async (request: AuthenticatedRequest, response) => {
+  const restaurantIdParam = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id;
+  const userId = request.authUser!.id;
+
+  await prisma.rating.deleteMany({
+    where: { 
+      restaurantId: restaurantIdParam,
+      userId: userId 
     },
   });
+
+  response.status(204).end();
 });
 
 export { restaurantsRouter };

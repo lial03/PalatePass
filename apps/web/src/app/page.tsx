@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -26,12 +27,17 @@ export default function Home() {
         {/* Parallax Background */}
         <motion.div 
           style={{ 
-            y: y1,
-            backgroundImage: "url('https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2000&auto=format&fit=crop')"
+            y: y1
           }}
-          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+          className="absolute inset-0 z-0"
         >
-          <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2000&auto=format&fit=crop')" }} />
+          <Image 
+            src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2000&auto=format&fit=crop" 
+            alt="PalatePass Header"
+            fill
+            priority
+            className="object-cover object-center opacity-80"
+          />
         </motion.div>
         
         <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/60 via-black/40 to-black/90" />
@@ -145,9 +151,11 @@ export default function Home() {
             variants={{ hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 200, damping: 25 } } }}
             className="group relative overflow-hidden rounded-[2rem] border border-border/50 bg-surface shadow-xl md:col-span-7"
           >
-            <div 
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-              style={{ backgroundImage: "url('https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1200&auto=format&fit=crop')" }} 
+            <Image 
+              src="https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1200&auto=format&fit=crop" 
+              alt="L'Antica Pizzeria"
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
             />
             <div className="absolute inset-x-0 bottom-0 top-0 bg-gradient-to-t from-black via-black/60 to-black/10" />
             
@@ -194,7 +202,9 @@ export default function Home() {
                     "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop",
                     "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop",
                   ].map((img, i) => (
-                    <img key={i} className="h-16 w-16 rounded-full border-4 border-surface-strong object-cover shadow-sm transition hover:scale-110 hover:z-10" src={img} alt="User Avatar" />
+                    <div key={i} className="relative h-16 w-16 overflow-hidden rounded-full border-4 border-surface-strong shadow-sm transition hover:scale-110 hover:z-10">
+                      <Image src={img} alt="User Avatar" fill className="object-cover" />
+                    </div>
                   ))}
                   <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-surface-strong bg-accent text-sm font-bold text-white shadow-sm">+2k</div>
                 </div>

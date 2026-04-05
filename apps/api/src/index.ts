@@ -8,6 +8,7 @@ import { authRouter } from "./routes/auth.js";
 import { recommendationsRouter } from "./routes/recommendations.js";
 import { restaurantsRouter } from "./routes/restaurants.js";
 import { usersRouter } from "./routes/users.js";
+import { listsRouter } from "./routes/lists.js";
 
 
 const app = express();
@@ -26,6 +27,7 @@ app.use("/auth", authRouter);
 app.use("/recommendations", recommendationsRouter);
 app.use("/restaurants", restaurantsRouter);
 app.use("/users", usersRouter);
+app.use("/lists", listsRouter);
 
 app.get("/health", (_request, response) => {
   response.json({
