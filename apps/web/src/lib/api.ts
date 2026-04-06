@@ -1,4 +1,6 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const rawApiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const normalizedApiBase = rawApiBase.replace(/\/$/, "");
+const API_BASE = normalizedApiBase.endsWith("/api") ? normalizedApiBase : `${normalizedApiBase}/api`;
 
 export type ApiUser = {
   id: string;

@@ -26,9 +26,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${sora.variable} ${newsreader.variable} antialiased pt-24 pb-12`}
+        suppressHydrationWarning
       >
         <Providers>
           <NavBar />

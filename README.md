@@ -52,7 +52,7 @@ PalatePass solves this by making discovery social, personalized, and shareable.
 
 ### Restaurant Ratings
 
-- 1-5 star ratings
+- 1-10 ratings
 - Short written reviews
 - Review tags (cozy, spicy, affordable, fast service)
 
@@ -90,7 +90,8 @@ PalatePass solves this by making discovery social, personalized, and shareable.
 
 - Frontend: Next.js (React) + Tailwind CSS
 - Backend: Node.js + Express
-- Database: PostgreSQL (recommended for MVP)
+- Database: PostgreSQL (Supabase)
+- Hosting: Vercel (Single Project Monorepo)
 - Integrations: QR code library, Google Maps API
 
 ## Monetization Ideas
@@ -167,14 +168,17 @@ PalatePass/
 - `npm run lint`
 - `npm run check:api`
 
-## CI/CD
+## CI/CD and Deployment
 
 GitHub Actions workflows are configured in `.github/workflows`:
 
 - CI (`ci.yml`): runs on pushes and PRs for `main` and `develop`, and executes web lint, API tests, API typecheck, and build.
-- CD (`cd.yml`): runs on pushes to `main` and packages release artifacts only (no auto-deploy yet).
+- CD (`cd.yml`): runs on pushes to `main` and packages release artifacts.
 
-When we choose a hosting target later (for example Vercel, Render, Railway, Fly.io, or AWS), we can add a deployment job and the required repository secrets.
+**Deployment**:
+
+- The project is configured for deployment on **Vercel** as a single monorepo project.
+- The database is hosted on **Supabase**.
 
 ## Product Notes
 

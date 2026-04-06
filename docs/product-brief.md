@@ -99,7 +99,8 @@ Users get a taste compatibility score (example: Taste Match 78%) based on:
 
 - Frontend: Next.js + Tailwind CSS
 - Backend: Node.js + Express
-- Database: PostgreSQL
+- Database: PostgreSQL (Supabase)
+- Hosting: Vercel (Monorepo)
 - Services: QR generation, map integration
 
 ## Monetization Strategy (Brainstormed)
