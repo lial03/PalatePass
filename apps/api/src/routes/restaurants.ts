@@ -92,7 +92,14 @@ restaurantsRouter.get("/", async (request, response) => {
     skip,
     take: limit,
     orderBy: [{ sponsored: "desc" }, { createdAt: "desc" }],
-    include: { _count: { select: { ratings: true } }, ratings: { select: { score: true } } },
+    include: { 
+      _count: { select: { ratings: true } }, 
+      ratings: { 
+        select: { score: true, photoUrls: true },
+        take: 3,
+        orderBy: { createdAt: 'desc' }
+      } 
+    },
   });
 
   const data = (restaurants as unknown as RestaurantListRow[]).map((r) => {

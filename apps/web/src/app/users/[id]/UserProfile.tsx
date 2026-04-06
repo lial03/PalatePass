@@ -8,6 +8,7 @@ import Image from "next/image";
 import { Users, Heart, Star, ChevronLeft, UserPlus, UserCheck, Flame, Loader2, List as ListIcon, Settings, Lock, X } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 import { api, type UserProfile, type List } from "../../../lib/api";
+import { getRestaurantImage, type RestaurantWithRatings } from "../../../lib/images";
 
 function UserListModal({ 
   isOpen, 
@@ -57,16 +58,16 @@ function UserListModal({
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="relative w-full max-w-lg overflow-hidden rounded-[3rem] border border-white/10 bg-[#1c1917] shadow-2xl backdrop-blur-xl flex flex-col max-h-[80vh]"
+        className="relative w-full max-w-lg overflow-hidden rounded-section border border-white/10 bg-foreground shadow-premium backdrop-blur-xl flex flex-col max-h-[80vh]"
       >
         <div className="p-8 border-b border-white/5 flex items-center justify-between">
            <div>
-             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Social Circle</p>
+             <p className="text-xs font-black uppercase tracking-[0.2em] text-accent">Social Circle</p>
              <h2 className="mt-1 font-serif text-3xl font-bold text-white">{title}</h2>
            </div>
            <button 
             onClick={onClose}
-            className="rounded-full bg-white/5 p-2 text-white/40 hover:bg-white/10 hover:text-white transition"
+            className="rounded-full bg-white/5 p-2 text-foreground-muted hover:bg-white/10 hover:text-white transition"
            >
              <X className="h-5 w-5" />
            </button>
@@ -80,7 +81,7 @@ function UserListModal({
            ) : users.length === 0 ? (
              <div className="py-20 text-center">
                <Users className="mx-auto h-12 w-12 text-white/10 mb-4" />
-               <p className="text-white/40 font-medium italic">Nothing to see here yet.</p>
+               <p className="text-foreground-muted font-medium italic">Nothing to see here yet.</p>
              </div>
            ) : (
              <div className="space-y-4">
@@ -97,12 +98,13 @@ function UserListModal({
                             src={user.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user.displayName}`} 
                             alt={user.displayName}
                             width={48} height={48}
+                            unoptimized
                             className="object-cover"
                            />
                         </div>
                         <div>
                            <p className="font-bold text-white group-hover:text-accent transition-colors">{user.displayName}</p>
-                           {user.bio && <p className="text-xs text-white/40 line-clamp-1 italic">{user.bio}</p>}
+                           {user.bio && <p className="text-xs text-foreground-muted line-clamp-1 italic">{user.bio}</p>}
                         </div>
                      </div>
                      <ChevronLeft className="h-4 w-4 text-white/20 rotate-180 group-hover:text-accent transition-all" />
@@ -136,6 +138,7 @@ export default function UserProfileComponent() {
   const [isFollowing, setIsFollowing] = useState(false); 
   const [followLoading, setFollowLoading] = useState(false);
   
+  const [activeTab, setActiveTab] = useState<'collections' | 'ratings'>('collections');
   const [showCreateList, setShowCreateList] = useState(false);
   const [newListName, setNewListName] = useState("");
   const [newListDesc, setNewListDesc] = useState("");
@@ -251,7 +254,7 @@ export default function UserProfileComponent() {
          />
          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
          
-         <button onClick={() => router.back()} className="absolute left-6 top-6 z-10 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white tracking-widest uppercase backdrop-blur hover:bg-white/20 transition">
+         <button onClick={() => router.back()} className="absolute left-6 top-32 z-10 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white tracking-widest uppercase backdrop-blur hover:bg-white/20 transition focus-gentle">
              <ChevronLeft className="h-4 w-4" /> Go Back
          </button>
       </div>
@@ -264,11 +267,12 @@ export default function UserProfileComponent() {
       >
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
            <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 text-center sm:text-left">
-              <div className="relative h-32 w-32 sm:h-40 sm:w-40 shrink-0 overflow-hidden rounded-[2.5rem] border-4 border-black bg-surface shadow-2xl backdrop-blur-sm">
+              <div className="relative h-32 w-32 sm:h-40 sm:w-40 shrink-0 overflow-hidden rounded-card border-4 border-black bg-surface shadow-premium backdrop-blur-sm">
                  <Image 
                     src={profile.avatarUrl || getAvatarUrl(profile.displayName)} 
                     alt={profile.displayName} 
                     fill
+                    unoptimized
                     className="object-cover" 
                  />
               </div>
@@ -306,15 +310,15 @@ export default function UserProfileComponent() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="mt-10 overflow-hidden rounded-[2.5rem] border border-accent/20 bg-gradient-to-r from-accent/10 to-transparent p-1 shadow-2xl"
+            className="mt-10 overflow-hidden rounded-card border border-accent/20 bg-gradient-to-r from-accent/10 to-transparent p-1 shadow-premium"
           >
             <div className="rounded-[2.4rem] bg-black/40 backdrop-blur-2xl p-8 flex items-center justify-between relative overflow-hidden">
                <div className="relative z-10">
-                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-accent">Epicurean Pulse</p>
+                 <p className="text-xs font-black uppercase tracking-[0.3em] text-accent">Epicurean Pulse</p>
                  <h3 className="mt-2 font-serif text-3xl font-bold text-white">Taste Compatibility</h3>
-                 <p className="mt-2 text-sm text-white/40 font-medium">Your culinary lenses are highly synchronized.</p>
+                 <p className="mt-2 text-sm text-foreground-muted font-medium">Your culinary lenses are highly synchronized.</p>
                </div>
-               <div className="relative z-10 flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-accent shadow-2xl shadow-accent/40 ring-4 ring-accent/10">
+               <div className="relative z-10 flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-accent shadow-premium shadow-accent/40 ring-4 ring-accent/10">
                   <span className="font-serif text-2xl font-black text-white">{Math.round(tasteMatch)}%</span>
                </div>
                <Flame className="absolute -right-8 -bottom-8 h-40 w-40 text-accent/5 pointer-events-none" />
@@ -333,11 +337,11 @@ export default function UserProfileComponent() {
               key={i} 
               onClick={stat.action}
               disabled={!stat.action}
-              className={`flex flex-col items-center justify-center rounded-[2.5rem] border border-white/5 bg-white/5 p-8 backdrop-blur-md transition-all ${stat.action ? 'hover:bg-white/10 hover:border-accent/20 cursor-pointer group' : 'cursor-default'}`}
+              className={`flex flex-col items-center justify-center rounded-card border border-white/5 bg-white/5 p-8 backdrop-blur-md transition-all ${stat.action ? 'hover:bg-white/10 hover:border-accent/20 cursor-pointer group' : 'cursor-default'}`}
              >
                 <stat.icon className={`mb-4 h-6 w-6 transition-colors ${stat.action ? 'text-accent/50 group-hover:text-accent' : 'text-accent'}`} />
                 <span className="text-3xl font-serif font-black text-white">{stat.value}</span>
-                <span className="mt-2 text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/30 group-hover:text-white/60 transition-colors">{stat.label}</span>
+                <span className="mt-2 text-xs font-black uppercase tracking-[0.2em] text-white/30 group-hover:text-white/60 transition-colors">{stat.label}</span>
              </button>
            ))}
         </div>
@@ -355,108 +359,219 @@ export default function UserProfileComponent() {
           </div>
         )}
 
-        <div className="mt-16 group/collections">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="font-serif text-4xl font-bold text-white">Collections</h2>
-            {isSelf && !showCreateList && (
-               <button 
-                onClick={() => setShowCreateList(true)}
-                className="flex items-center gap-2 rounded-full bg-accent/10 px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-accent transition-all hover:bg-accent/20"
-               >
-                  + Create Collection
-               </button>
-            )}
-          </div>
+        <div className="mt-16 flex items-center justify-center gap-2 rounded-full bg-white/5 p-1.5 backdrop-blur-xl border border-white/5">
+           <button 
+             onClick={() => setActiveTab('collections')}
+             aria-label="View Collections"
+             className={`flex-1 flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all ${activeTab === 'collections' ? 'bg-accent text-white shadow-xl shadow-accent/20' : 'text-foreground-muted hover:text-white'}`}
+           >
+             <ListIcon className="h-4 w-4" /> Collections
+           </button>
+           <button 
+             onClick={() => setActiveTab('ratings')}
+             aria-label="View Ratings"
+             className={`flex-1 flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all ${activeTab === 'ratings' ? 'bg-accent text-white shadow-xl shadow-accent/20' : 'text-foreground-muted hover:text-white'}`}
+           >
+             <Star className="h-4 w-4" /> Ratings
+           </button>
+        </div>
 
-          <AnimatePresence>
-            {isSelf && showCreateList && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95, y: -20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -20 }}
-                  className="mb-10 rounded-[3rem] border border-white/10 bg-white/5 p-10 backdrop-blur-2xl shadow-2xl"
-                >
-                    <form onSubmit={handleCreateList} className="space-y-6">
+        <div className="mt-16">
+          <AnimatePresence mode="wait">
+            {activeTab === 'collections' ? (
+              <motion.div 
+                key="collections"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4 }}
+                className="group/collections"
+              >
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="font-serif text-4xl font-bold text-white">Curated Collections</h2>
+                  {isSelf && !showCreateList && (
+                    <button 
+                      onClick={() => setShowCreateList(true)}
+                      className="flex items-center gap-2 rounded-full bg-accent/10 px-6 py-2.5 text-xs font-black uppercase tracking-widest text-accent transition-all hover:bg-accent/20"
+                    >
+                        + Create Collection
+                    </button>
+                  )}
+                </div>
+
+                <AnimatePresence>
+                  {isSelf && showCreateList && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95, y: -20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -20 }}
+                      className="mb-10 rounded-section border border-white/10 bg-white/5 p-10 backdrop-blur-2xl shadow-premium"
+                    >
+                      <form onSubmit={handleCreateList} className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-[11px] font-black uppercase tracking-[0.2em] text-white/40 ml-4">Collection Title</label>
-                            <input 
-                              required
-                              value={newListName}
-                              onChange={e => setNewListName(e.target.value)}
-                              placeholder="e.g. Kyoto Midnight Gems"
-                              className="w-full rounded-[2rem] border border-white/10 bg-black/20 px-8 py-5 text-lg font-bold text-white outline-none focus:border-accent transition-all placeholder:text-white/10"
-                            />
+                          <label className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground-muted ml-4">Collection Title</label>
+                          <input 
+                            required
+                            value={newListName}
+                            onChange={e => setNewListName(e.target.value)}
+                            placeholder="e.g. Kyoto Midnight Gems"
+                            className="w-full rounded-[2rem] border border-white/10 bg-black/20 px-8 py-5 text-lg font-bold text-white outline-none focus:border-accent transition-all placeholder:text-white/10"
+                          />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[11px] font-black uppercase tracking-[0.2em] text-white/40 ml-4">Curatorial Theme</label>
-                            <textarea 
-                              value={newListDesc}
-                              onChange={e => setNewListDesc(e.target.value)}
-                              placeholder="Define the identity of this gastronomy circle..."
-                              className="w-full rounded-[2.5rem] border border-white/10 bg-black/20 px-8 py-6 text-white outline-none focus:border-accent transition-all min-h-[120px] resize-none leading-relaxed"
-                            />
+                          <label className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground-muted ml-4">Curatorial Theme</label>
+                          <textarea 
+                            value={newListDesc}
+                            onChange={e => setNewListDesc(e.target.value)}
+                            placeholder="Define the identity of this gastronomy circle..."
+                            className="w-full rounded-card border border-white/10 bg-black/20 px-8 py-6 text-white outline-none focus:border-accent transition-all min-h-[120px] resize-none leading-relaxed"
+                          />
                         </div>
                         <div className="flex items-center gap-4 pt-4">
-                            <button 
-                              type="submit" 
-                              disabled={creatingList}
-                              className="flex-1 rounded-full bg-accent py-5 text-sm font-black uppercase tracking-[0.2em] text-white shadow-2xl shadow-accent/20 hover:bg-accent-strong transition disabled:opacity-50"
-                            >
-                               {creatingList ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : "Publish Collection"}
-                            </button>
-                            <button 
-                              type="button" 
-                              onClick={() => setShowCreateList(false)}
-                              className="flex-1 rounded-full border border-white/10 py-5 text-sm font-black uppercase tracking-[0.2em] text-white/50 hover:bg-white/5 transition"
-                            >
-                                Discard
-                            </button>
+                          <button 
+                            type="submit" 
+                            disabled={creatingList}
+                            className="flex-1 rounded-full bg-accent py-5 text-sm font-black uppercase tracking-[0.2em] text-white shadow-premium shadow-accent/20 hover:bg-accent-strong transition disabled:opacity-50"
+                          >
+                            {creatingList ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : "Publish Collection"}
+                          </button>
+                          <button 
+                            type="button" 
+                            onClick={() => setShowCreateList(false)}
+                            className="flex-1 rounded-full border border-white/10 py-5 text-sm font-black uppercase tracking-[0.2em] text-white/50 hover:bg-white/5 transition"
+                          >
+                            Discard
+                          </button>
                         </div>
-                    </form>
-                </motion.div>
-            )}
-          </AnimatePresence>
-          
-          {lists.length === 0 ? (
-            <div className="rounded-[3rem] border border-dashed border-white/10 bg-white/5 py-24 text-center backdrop-blur-sm">
-                <ListIcon className="mx-auto h-16 w-16 text-white/5 mb-6" />
-                <p className="font-serif text-2xl text-white/20 italic">{isSelf ? "Your curatorial lens is waiting. Start your first collection." : "No public collections shared yet."}</p>
-            </div>
-          ) : (
-            <div className="grid gap-6 sm:grid-cols-2">
-                {lists.map((list) => (
-                  <Link 
-                    key={list.id} 
-                    href={`/lists/${list.id}`}
-                    className="group/list relative overflow-hidden rounded-[3rem] border border-white/10 bg-white/5 p-10 backdrop-blur-md transition-all hover:bg-white/10 hover:translate-y-[-8px] hover:shadow-2xl"
-                  >
-                    <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-6">
+                      </form>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                
+                {lists.length === 0 ? (
+                  <div className="rounded-section border border-dashed border-white/10 bg-white/5 py-24 text-center backdrop-blur-sm">
+                    <ListIcon className="mx-auto h-16 w-16 text-white/5 mb-6" />
+                    <p className="font-serif text-2xl text-white/20 italic">{isSelf ? "Your curatorial lens is waiting. Start your first collection." : "No public collections shared yet."}</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    {lists.map((list) => (
+                      <Link 
+                        key={list.id} 
+                        href={`/lists/${list.id}`}
+                        className="group/list relative overflow-hidden rounded-section border border-white/10 bg-white/5 p-10 backdrop-blur-md transition-all hover:bg-white/10 hover:translate-y-[-8px] hover:shadow-premium"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-6">
                             <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-accent/20 text-accent transition-transform group-hover/list:scale-110">
-                                <ListIcon className="h-8 w-8" />
+                              <ListIcon className="h-8 w-8" />
                             </div>
                             <div>
-                                <h3 className="font-serif text-3xl font-bold text-white group-hover/list:text-accent transition-colors">{list.name}</h3>
-                                <div className="flex items-center gap-3 mt-1.5">
-                                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">{list._count.items} Spots</span>
-                                   <span className="h-1 w-1 rounded-full bg-white/20" />
-                                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Updated {new Date(list.updatedAt).toLocaleDateString()}</span>
-                                </div>
+                              <h3 className="font-serif text-3xl font-bold text-white group-hover/list:text-accent transition-colors">{list.name}</h3>
+                              <div className="flex items-center gap-3 mt-1.5">
+                                <span className="text-xs font-black uppercase tracking-[0.2em] text-accent">{list._count.items} Spots</span>
+                                <span className="h-1 w-1 rounded-full bg-white/20" />
+                                <span className="text-xs font-black uppercase tracking-[0.2em] text-white/20">Updated {new Date(list.updatedAt).toLocaleDateString()}</span>
+                              </div>
                             </div>
+                          </div>
+                          {!list.isPublic && <Lock className="h-5 w-5 text-accent/40" />}
                         </div>
-                        {!list.isPublic && <Lock className="h-5 w-5 text-accent/40" />}
-                    </div>
-                    {list.description && <p className="mt-8 text-sm text-white/50 italic line-clamp-2 leading-relaxed">&ldquo;{list.description}&rdquo;</p>}
-                    
-                    <div className="mt-10 flex items-center justify-between">
-                        <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-accent opacity-0 group-hover/list:opacity-100 transition-all -translate-x-4 group-hover/list:translate-x-0">
-                          Discover Treasury <ChevronLeft className="h-3 w-3 rotate-180" />
-                        </span>
-                    </div>
-                  </Link>
-                ))}
-            </div>
-          )}
+                        {list.description && <p className="mt-8 text-sm text-white/50 italic line-clamp-2 leading-relaxed">&ldquo;{list.description}&rdquo;</p>}
+                        
+                        <div className="mt-10 flex items-center justify-between">
+                          <span className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.3em] text-accent opacity-0 group-hover/list:opacity-100 transition-all -translate-x-4 group-hover/list:translate-x-0">
+                            Discover Treasury <ChevronLeft className="h-3 w-3 rotate-180" />
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="ratings"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4 }}
+              >
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="font-serif text-4xl font-bold text-white">Lenz History</h2>
+                  <div className="h-10 w-10 flex items-center justify-center rounded-full bg-accent/10 text-accent">
+                    <Flame className="h-5 w-5" />
+                  </div>
+                </div>
+
+                {(!profile.ratings || profile.ratings.length === 0) ? (
+                  <div className="rounded-section border border-dashed border-white/10 bg-white/5 py-24 text-center backdrop-blur-sm">
+                    <Star className="mx-auto h-16 w-16 text-white/5 mb-6" />
+                    <p className="font-serif text-2xl text-white/20 italic">{isSelf ? "Your epicurean lens is clear. Submit your first rating." : "No culinary evidence shared yet."}</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6">
+                    {profile.ratings.map((rating) =>                       <div 
+                        key={rating.id} 
+                        className="group/rating relative overflow-hidden rounded-card border border-border bg-surface p-8 shadow-sm transition-all hover:shadow-premium hover:-translate-y-1"
+                      >
+                         <div className="flex flex-col sm:flex-row items-start justify-between gap-8">
+                            <div className="relative h-40 w-full sm:h-48 sm:w-48 shrink-0 overflow-hidden rounded-ui border border-border shadow-sm">
+                               <Image 
+                                 src={getRestaurantImage(rating.restaurant as RestaurantWithRatings)} 
+                                 alt={rating.restaurant.name}
+                                 fill
+                                 unoptimized
+                                 className="object-cover transition-transform duration-700 group-hover/rating:scale-110"
+                               />
+                            </div>
+                            <div className="flex-1">
+                               <div className="flex items-center gap-3 mb-2">
+                                  <span className="text-xs font-black uppercase tracking-[0.2em] text-accent/80">{rating.restaurant.cuisine}</span>
+                                  <span className="h-1 w-1 rounded-full bg-border" />
+                                  <span className="text-xs font-black uppercase tracking-[0.2em] text-muted">{rating.restaurant.city}</span>
+                               </div>
+                               <Link 
+                                 href={`/restaurants/${rating.restaurant.id}`}
+                                 aria-label={`View details for ${rating.restaurant.name}`}
+                                 className="font-serif text-3xl font-bold text-foreground hover:text-accent transition-colors block mb-4"
+                               >
+                                 {rating.restaurant.name}
+                               </Link>
+                               <p className="text-muted italic leading-relaxed line-clamp-3 font-serif">&ldquo;{rating.notes}&rdquo;</p>
+                               
+                               {rating.photoUrls && rating.photoUrls.length > 0 && (
+                                 <div className="mt-6 flex gap-2">
+                                    {rating.photoUrls.slice(0, 4).map((url, idx) => (
+                                      <div key={idx} className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-border shadow-sm">
+                                         <Image src={url} alt="Review photo" fill unoptimized className="object-cover" />
+                                      </div>
+                                    ))}
+                                    {rating.photoUrls.length > 4 && (
+                                      <div className="h-14 w-14 flex items-center justify-center rounded-xl bg-surface-strong border border-border text-xs font-black text-muted">
+                                        +{rating.photoUrls.length - 4}
+                                      </div>
+                                    )}
+                                 </div>
+                               )}
+                            </div>
+
+                            <div className="flex flex-row sm:flex-col items-center justify-between sm:justify-start gap-4 shrink-0">
+                               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-white shadow-premium shadow-accent/20 border-4 border-background/20">
+                                  <span className="font-serif text-xl font-black">{rating.score}</span>
+                                </div>
+                                <span className="text-xs font-bold uppercase tracking-[0.2em] text-muted">
+                                  {new Date(rating.createdAt).toLocaleDateString()}
+                                </span>
+                             </div>
+                          </div>
+                       </div>
+                    )}
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.div>
 

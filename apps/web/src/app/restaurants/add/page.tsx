@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { MapPin, Utensils, Building, Globe, Navigation, Loader2, Star, MessageSquare, Wallet, Camera, DollarSign, X, Plus } from "lucide-react";
 import Image from "next/image";
 
-function AutocompleteInput({ onPlaceSelected }: { onPlaceSelected: (place: google.maps.places.PlaceResult) => void }) {
+function SearchableNameInput({ value, onChange, onPlaceSelected }: { value: string, onChange: (val: string) => void, onPlaceSelected: (place: google.maps.places.PlaceResult) => void }) {
   const placesLib = useMapsLibrary('places');
   const inputRef = useRef<HTMLInputElement>(null);
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
@@ -39,14 +39,16 @@ function AutocompleteInput({ onPlaceSelected }: { onPlaceSelected: (place: googl
 
   return (
     <div className="relative group">
-      <Navigation className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted group-focus-within:text-accent transition-colors" />
+      <Building className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted group-focus-within:text-accent transition-colors" />
       <input
-        id="input-address"
+        id="input-name"
         ref={inputRef}
         type="text"
         required
-        placeholder="Physical Address"
-        className="w-full rounded-2xl border border-border/50 bg-white/70 pl-12 pr-4 py-4 text-foreground outline-none transition-all focus:border-accent focus:bg-white focus:ring-4 focus:ring-accent/5 placeholder:text-muted/50"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Restaurant Name (Search or Type)"
+        className="w-full rounded-2xl border border-border/50 bg-white/70 pl-12 pr-4 py-4 text-foreground outline-none transition-all focus:border-accent focus:bg-white focus:ring-4 focus:ring-accent/5 placeholder:text-muted/50 focus-gentle"
       />
     </div>
   );
@@ -80,6 +82,7 @@ export default function AddRestaurant() {
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
   const onPlaceSelected = (place: google.maps.places.PlaceResult) => {
+    if (place.name) setName(place.name);
     if (place.formatted_address) setAddress(place.formatted_address);
     if (place.place_id) setGooglePlaceId(place.place_id);
     if (place.geometry?.location) {
@@ -95,12 +98,27 @@ export default function AddRestaurant() {
     if (countryComp) setCountryCode(countryComp.short_name);
   };
 
-  const handleMockPhotoUpload = () => {
-    const mockPhotos = [
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=800&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=800&auto=format&fit=crop"
-    ];
-    setPhotoUrls(prev => [...prev, mockPhotos[prev.length % 2]]);
+  const handleRealUpload = () => {
+    if (!window.cloudinary) return;
+
+    const widget = window.cloudinary.createUploadWidget(
+      {
+        cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "demo",
+        uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "palatepass_unsigned",
+        multiple: true,
+        resourceType: "image",
+        maxFiles: 5,
+        cropping: true,
+        showSkipCropButton: true,
+        styles: { palette: { theme: 'black' } }
+      },
+      (error, result) => {
+        if (!error && result && result.event === "success") {
+          setPhotoUrls(prev => [...prev, result.info.secure_url]);
+        }
+      }
+    );
+    widget.open();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -135,6 +153,7 @@ export default function AddRestaurant() {
 
       router.push(`/restaurants/${res.restaurant.id}`);
     } catch (err) {
+      console.error("Failed to add spot:", err);
       alert("Failed to add spot. Please try again.");
     } finally {
       setLoading(false);
@@ -157,81 +176,81 @@ export default function AddRestaurant() {
 
           <form onSubmit={handleSubmit} className="space-y-10">
             {/* Base Spot Info */}
-            <div className="rounded-[3rem] border border-border bg-white/50 p-8 shadow-2xl shadow-black/5 backdrop-blur-xl md:p-12">
-               <h2 className="mb-10 font-serif text-3xl font-bold border-b border-border pb-6">Spot Details</h2>
-               
-               <div className="space-y-8">
-                  <div className="grid gap-6 md:grid-cols-2">
-                     <div className="relative group">
-                        <Building className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted group-focus-within:text-accent transition-colors" />
-                        <input
-                          id="input-name"
-                          type="text"
-                          required
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="Restaurant Name"
-                          className="w-full rounded-2xl border border-border/50 bg-white/70 pl-12 pr-4 py-4 text-foreground outline-none transition-all focus:border-accent focus:bg-white focus:ring-4 focus:ring-accent/5 placeholder:text-muted/50"
-                        />
-                     </div>
-                     <div className="relative group">
-                        <Utensils className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted group-focus-within:text-accent transition-colors" />
-                        <input
-                          id="input-cuisine"
-                          type="text"
-                          required
-                          value={cuisine}
-                          onChange={(e) => setCuisine(e.target.value)}
-                          placeholder="Cuisine Type (e.g. Italian)"
-                          className="w-full rounded-2xl border border-border/50 bg-white/70 pl-12 pr-4 py-4 text-foreground outline-none transition-all focus:border-accent focus:bg-white focus:ring-4 focus:ring-accent/5 placeholder:text-muted/50"
-                        />
-                     </div>
-                  </div>
+            <div className="rounded-section border border-border bg-glass-bg p-8 shadow-premium backdrop-blur-xl md:p-12">
+                <h2 className="mb-10 font-serif text-3xl font-bold border-b border-border pb-6">Spot Details</h2>
+                
+                <div className="space-y-8">
+                   <div className="grid gap-6 md:grid-cols-2">
+                      <SearchableNameInput value={name} onChange={setName} onPlaceSelected={onPlaceSelected} />
+                      <div className="relative group">
+                         <Utensils className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted group-focus-within:text-accent transition-colors" />
+                         <input
+                           id="input-cuisine" aria-label="Cuisine Type"
+                           type="text"
+                           required
+                           value={cuisine}
+                           onChange={(e) => setCuisine(e.target.value)}
+                           placeholder="Cuisine Type (e.g. Italian)"
+                           className="w-full rounded-ui border border-border/50 bg-white/70 pl-12 pr-4 py-4 text-foreground outline-none transition-all focus:border-accent focus:bg-white focus:ring-4 focus:ring-accent/5 placeholder:text-muted/50 focus-gentle"
+                         />
+                      </div>
+                   </div>
 
-                  <AutocompleteInput onPlaceSelected={onPlaceSelected} />
+                   <div className="relative group">
+                      <Navigation className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted group-focus-within:text-accent transition-colors" />
+                      <input
+                        id="input-address" aria-label="Physical Address"
+                        type="text"
+                        required
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Physical Address"
+                        className="w-full rounded-ui border border-border/50 bg-white/70 pl-12 pr-4 py-4 text-foreground outline-none transition-all focus:border-accent focus:bg-white focus:ring-4 focus:ring-accent/5 placeholder:text-muted/50 focus-gentle"
+                      />
+                   </div>
 
-                  <div className="grid gap-6 md:grid-cols-2">
-                     <div className="relative group">
-                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted group-focus-within:text-accent transition-colors" />
-                        <input
-                          id="input-city"
-                          type="text"
-                          required
-                          value={city}
-                          onChange={(e) => setCity(e.target.value)}
-                          placeholder="City"
-                          className="w-full rounded-2xl border border-border/50 bg-white/70 pl-12 pr-4 py-4 text-foreground outline-none transition-all focus:border-accent focus:bg-white focus:ring-4 focus:ring-accent/5 placeholder:text-muted/50"
-                        />
-                     </div>
-                     <div className="relative group">
-                        <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted group-focus-within:text-accent transition-colors" />
-                        <select
-                          id="select-country"
-                          required
-                          value={countryCode}
-                          onChange={(e) => setCountryCode(e.target.value)}
-                          className="w-full rounded-2xl border border-border/50 bg-white/70 pl-12 pr-4 py-4 text-foreground outline-none transition-all focus:border-accent focus:bg-white focus:ring-4 focus:ring-accent/5 appearance-none cursor-pointer"
-                        >
-                          <option value="">Select Country</option>
-                          {COUNTRIES.map((c) => (
-                            <option key={c.code} value={c.code}>{c.name}</option>
-                          ))}
-                        </select>
-                     </div>
-                  </div>
-               </div>
-            </div>
+                   <div className="grid gap-6 md:grid-cols-2">
+                      <div className="relative group">
+                         <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted group-focus-within:text-accent transition-colors" />
+                         <input
+                           id="input-city" aria-label="City"
+                           type="text"
+                           required
+                           value={city}
+                           onChange={(e) => setCity(e.target.value)}
+                           placeholder="City"
+                           className="w-full rounded-ui border border-border/50 bg-white/70 pl-12 pr-4 py-4 text-foreground outline-none transition-all focus:border-accent focus:bg-white focus:ring-4 focus:ring-accent/5 placeholder:text-muted/50 focus-gentle"
+                         />
+                      </div>
+                      <div className="relative group">
+                         <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted group-focus-within:text-accent transition-colors" />
+                         <select
+                           id="select-country" aria-label="Select Country"
+                           required
+                           value={countryCode}
+                           onChange={(e) => setCountryCode(e.target.value)}
+                           className="w-full rounded-ui border border-border/50 bg-white/70 pl-12 pr-4 py-4 text-foreground outline-none transition-all focus:border-accent focus:bg-white focus:ring-4 focus:ring-accent/5 appearance-none cursor-pointer"
+                         >
+                           <option value="">Select Country</option>
+                           {COUNTRIES.map((c) => (
+                             <option key={c.code} value={c.code}>{c.name}</option>
+                           ))}
+                         </select>
+                      </div>
+                   </div>
+                </div>
+             </div>
 
             {/* Immersive Lens Integration */}
-            <div className="rounded-[3rem] border border-foreground bg-foreground p-8 shadow-2xl md:p-14">
-               <span className="text-[11px] font-black uppercase tracking-[0.3em] text-accent/80">Premium Contribution</span>
+            <div className="rounded-section border border-foreground bg-foreground p-8 shadow-premium md:p-14">
+               <span className="text-xs font-black uppercase tracking-[0.3em] text-accent/80">Premium Contribution</span>
                <h2 className="my-6 font-serif text-5xl font-bold tracking-tight text-white">Lend Your Lens</h2>
                <p className="mb-14 text-lg text-surface-strong/60 leading-relaxed font-medium">Capture the inaugural experience for this spot. Your score, spend, and visual evidence define the baseline for our community.</p>
                
                <div className="grid gap-14 lg:grid-cols-2">
                   <div className="space-y-12">
                      <div className="space-y-5">
-                        <label className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-[0.2em] text-white/30"><Star className="h-4 w-4" /> Baseline Score (1-10)</label>
+                        <label className="flex items-center gap-2.5 text-xs font-black uppercase tracking-[0.2em] text-white/30"><Star className="h-4 w-4" /> Baseline Score (1-10)</label>
                         <div className="flex flex-wrap gap-2.5">
                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
                               <button 
@@ -247,7 +266,7 @@ export default function AddRestaurant() {
                      </div>
 
                      <div className="space-y-6">
-                        <label className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-[0.2em] text-white/30"><Wallet className="h-4 w-4" /> Spend & Budget</label>
+                        <label className="flex items-center gap-2.5 text-xs font-black uppercase tracking-[0.2em] text-white/30"><Wallet className="h-4 w-4" /> Spend & Budget</label>
                         <div className="grid grid-cols-2 gap-4">
                            {BUDGET_TIERS.map(tier => (
                               <button 
@@ -257,7 +276,7 @@ export default function AddRestaurant() {
                                  className={`flex flex-col items-center justify-center gap-2 rounded-2xl border px-6 py-5 transition-all ${budgetTier === tier.id ? "bg-accent border-accent text-white shadow-2xl shadow-accent/20" : "bg-white/5 border-white/10 text-white/40 hover:border-accent/40 hover:text-white"}`}
                               >
                                  <tier.icon className={`h-6 w-6 mb-1 ${budgetTier === tier.id ? "text-white" : "text-accent/30"}`} />
-                                 <span className="text-[10px] font-black uppercase tracking-[0.15em]">{tier.label}</span>
+                                 <span className="text-xs font-black uppercase tracking-[0.15em]">{tier.label}</span>
                               </button>
                            ))}
                         </div>
@@ -287,7 +306,7 @@ export default function AddRestaurant() {
 
                   <div className="space-y-12">
                      <div className="space-y-5">
-                        <label className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-[0.2em] text-white/30"><MessageSquare className="h-4 w-4" /> Culinary Notes</label>
+                        <label className="flex items-center gap-2.5 text-xs font-black uppercase tracking-[0.2em] text-white/30"><MessageSquare className="h-4 w-4" /> Culinary Notes</label>
                         <textarea 
                            value={notes}
                            onChange={(e) => setNotes(e.target.value)}
@@ -297,11 +316,11 @@ export default function AddRestaurant() {
                      </div>
 
                      <div className="space-y-5">
-                        <label className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-[0.2em] text-white/30"><Camera className="h-4 w-4" /> Visual Evidence</label>
+                        <label className="flex items-center gap-2.5 text-xs font-black uppercase tracking-[0.2em] text-white/30"><Camera className="h-4 w-4" /> Visual Evidence</label>
                         <div className="flex flex-wrap gap-4">
                            {photoUrls.map((url, i) => (
                               <div key={i} className="group relative h-24 w-24 overflow-hidden rounded-[1.5rem] border border-white/20 shadow-2xl">
-                                 <Image src={url} alt="Review" fill className="object-cover" />
+                                 <Image src={url} alt="Review" fill unoptimized className="object-cover" />
                                  <button type="button" onClick={() => setPhotoUrls(prev => prev.filter((_, idx) => idx !== i))} className="absolute hidden group-hover:flex inset-0 items-center justify-center bg-black/60 text-white transition-all">
                                     <X className="h-6 w-6" />
                                  </button>
@@ -309,11 +328,11 @@ export default function AddRestaurant() {
                            ))}
                            <button 
                               type="button"
-                              onClick={handleMockPhotoUpload}
+                              onClick={handleRealUpload}
                               className="flex h-24 w-24 flex-col items-center justify-center gap-2 rounded-[1.5rem] border-2 border-dashed border-white/10 bg-white/5 text-white/20 hover:border-accent/50 hover:bg-white/10 hover:text-accent transition-all duration-300"
                            >
                               <Plus className="h-7 w-7" />
-                              <span className="text-[10px] font-black tracking-widest uppercase">ADD</span>
+                              <span className="text-xs font-black tracking-widest uppercase">ADD</span>
                            </button>
                         </div>
                      </div>

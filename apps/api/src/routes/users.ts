@@ -44,11 +44,19 @@ usersRouter.get("/:id", async (request, response) => {
         },
       },
       ratings: {
+        orderBy: { createdAt: "desc" },
         select: {
+          id: true,
           score: true,
+          notes: true,
+          photoUrls: true,
+          createdAt: true,
           restaurant: {
             select: {
+              id: true,
+              name: true,
               cuisine: true,
+              city: true,
             },
           },
         },
@@ -95,6 +103,19 @@ usersRouter.get("/:id", async (request, response) => {
         averageRating,
         favoriteCuisines,
       },
+      ratings: (user.ratings as any[]).slice(0, 20).map(r => ({
+        id: r.id,
+        score: r.score,
+        notes: r.notes,
+        photoUrls: r.photoUrls,
+        createdAt: r.createdAt,
+        restaurant: {
+            id: r.restaurant.id,
+            name: r.restaurant.name,
+            cuisine: r.restaurant.cuisine,
+            city: r.restaurant.city
+        }
+      }))
     },
   });
 });

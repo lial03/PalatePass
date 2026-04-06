@@ -30,6 +30,7 @@ export type Restaurant = {
   sponsored: boolean;
   averageScore: number | null;
   ratingCount: number;
+  ratings?: RatingSummary[];
 };
 
 export type RatingSummary = {
@@ -90,6 +91,7 @@ export type UserProfile = {
     averageRating: number | null;
     favoriteCuisines: string[];
   };
+  ratings?: Array<RatingSummary & { restaurant: { id: string, name: string, cuisine: string, city: string } }>;
 };
 
 async function apiFetch<T>(
