@@ -19,7 +19,7 @@
     "lint": "npm run lint:web && npm run lint:api",
     "check:api": "npm --workspace api run check",
     "test": "echo Add tests once app scaffolds are generated",
-    "postinstall": "npm --workspace api run prisma:generate"
+    "postinstall": "prisma generate --schema=apps/api/prisma/schema.prisma"
   },
   "devDependencies": {
     "@prisma/client": "^6.5.0",
@@ -30,6 +30,7 @@
     "express": "^5.2.1",
     "fdir": "^6.5.0",
     "jsonwebtoken": "^9.0.3",
+    "prisma": "^6.5.0",
     "typescript": "^5.8.2",
     "zod": "^4.3.6"
   }

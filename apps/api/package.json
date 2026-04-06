@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "prisma generate && tsc -p tsconfig.json",
+    "build": "prisma generate --schema=prisma/schema.prisma && tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "lint": "echo Add ESLint configuration for the API workspace",
-    "check": "prisma generate && tsc --noEmit",
+    "check": "prisma generate --schema=prisma/schema.prisma && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "prisma:generate": "prisma generate",
