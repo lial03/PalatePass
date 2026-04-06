@@ -175,7 +175,7 @@ usersRouter.get("/:id/followers", async (request, response) => {
     orderBy: { createdAt: "desc" }
   });
 
-  const data = follows.map(f => f.follower);
+  const data = follows.map((f: any) => f.follower);
   response.json({ data });
 });
 
@@ -193,7 +193,7 @@ usersRouter.get("/:id/following", async (request, response) => {
     orderBy: { createdAt: "desc" }
   });
 
-  const data = follows.map(f => f.following);
+  const data = follows.map((f: any) => f.following);
   response.json({ data });
 });
 
