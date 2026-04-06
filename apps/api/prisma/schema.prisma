@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  passwordHash String
+  displayName  String
+  bio          String?
+  avatarUrl    String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  restaurants  Restaurant[]
+  ratings      Rating[]
+  followers    Follow[]     @relation("UserFollowers")
+  following    Follow[]     @relation("UserFollowing")
+  lists        List[]
+}
+
+model Restaurant {
+  id              String   @id @default(cuid())
+  name            String
+  address         String
+  city            String
+  country         String?
+  countryCode     String?
+  countryName     String?
+  cuisine         String
+  googlePlaceId   String?
+  placeId         String?
+  submissionNotes String?
+  lat             Float?
+  lng             Float?
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  sponsored       Boolean  @default(false)
+  creator         User       @relation(fields: [createdBy], references: [id])
+  ratings         Rating[]
+  listItems       ListItem[]
+}
+
+model Rating {
+  id           String     @id @default(cuid())
+  score        Int
+  notes        String?
+  photoUrls      String[]   @default([])
+  images         String[]   @default([])
+  budgetTier     String?
+  budgetAmount   Int?
+  budgetCurrency String?
+  userId       String
+  restaurantId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  user         User       @relation(fields: [userId], references: [id])
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  tags         Tag[]      @relation("RatingTags")
+
+  @@unique([userId, restaurantId])
+}
+
+model Tag {
+  id      String   @id @default(cuid())
+  name    String   @unique
+  ratings Rating[] @relation("RatingTags")
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id])
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+}
+
+model List {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  isPublic    Boolean    @default(true)
+  userId      String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id])
+  items       ListItem[]
+}
+
+model ListItem {
+  id           String     @id @default(cuid())
+  listId       String
+  restaurantId String
+  notes        String?
+  createdAt    DateTime   @default(now())
+  list         List       @relation(fields: [listId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  @@unique([listId, restaurantId])
+}

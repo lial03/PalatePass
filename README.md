@@ -98,7 +98,32 @@ PalatePass solves this by making discovery social, personalized, and shareable.
 - Sponsored restaurant placements, clearly labeled
 - Premium user tier with advanced taste analytics and private lists
 - Restaurant analytics dashboard (rating counts, trend insights, top tags)
-- Affiliate partnerships (delivery and reservations)
+
+## Implementation Status
+
+### Done
+
+- Monorepo scaffold: Next.js web app + Express API with npm workspaces
+- CI/CD: GitHub Actions (lint, typecheck, tests on every push/PR)
+- Auth: register, login, `/me`, logout — Prisma + Supabase + JWT + bcrypt
+- Restaurant model: create, list (with filters + pagination), get by id
+- Ratings: add or update rating per user per restaurant, tag system
+- User profiles: public profile stats, profile update, follow/unfollow APIs
+- Recommendations: social feed based on followed users' high-rated restaurants
+- Automated tests: 40 passing (auth x6, restaurants x15, users x13, recommendations x4, affiliate x2)
+- Web UI: login, register, restaurant browse + detail + inline rating, social feed
+- Session security: httpOnly auth cookie, JWT expiry detection, 15-min inactivity auto-logout
+- User profile page: public stats, favorite cuisines, follow/unfollow, own-profile detection
+- Taste Match: compatibility score between users based on shared restaurants, cuisines, and tags
+- QR sharing: profile QR and review QR with copyable links
+- Affiliate partnerships: clearly labeled delivery/reservation links with click tracking hooks
+- Sponsored placements: sponsored restaurant badges plus prioritized listing order
+- Restaurant analytics groundwork: detail-page metrics for rating volume, top tags, and recent activity
+- API hardening: cookie-based auth with CORS credentials and 16kb JSON body limit
+
+### Up next
+
+- Premium analytics and trend visualizations
 
 ## Competitive Advantage
 
@@ -115,18 +140,41 @@ PalatePass combines trust-based discovery, taste matching, and shareability in o
 
 ```text
 PalatePass/
-	apps/
-		web/
-		api/
-	docs/
-	package.json
+  apps/
+    web/
+    api/
+  docs/
+  package.json
 ```
 
 ## Quick Start
 
 1. Install Node.js 20+.
 2. Run `npm install` at the repository root.
-3. Build web and API apps incrementally from the `apps/` folders.
+3. Run `npm run dev` to start the web app and API together.
+
+## Auth And Security Notes
+
+- The API now stores auth in an httpOnly `pp_token` cookie instead of exposing JWTs to the browser runtime.
+- The web app sends authenticated requests with `credentials: include`.
+- API JSON request bodies are capped at `16kb`.
+- Cross-origin auth requires `CLIENT_URL` to match the web app origin.
+
+## Workspace Commands
+
+- `npm run dev`
+- `npm run build`
+- `npm run lint`
+- `npm run check:api`
+
+## CI/CD
+
+GitHub Actions workflows are configured in `.github/workflows`:
+
+- CI (`ci.yml`): runs on pushes and PRs for `main` and `develop`, and executes web lint, API tests, API typecheck, and build.
+- CD (`cd.yml`): runs on pushes to `main` and packages release artifacts only (no auto-deploy yet).
+
+When we choose a hosting target later (for example Vercel, Render, Railway, Fly.io, or AWS), we can add a deployment job and the required repository secrets.
 
 ## Product Notes
 

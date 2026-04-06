@@ -8,10 +8,22 @@
     "apps/api"
   ],
   "scripts": {
-    "dev:web": "npm --workspace apps/web run dev",
-    "dev:api": "npm --workspace apps/api run dev",
-    "dev": "echo Run dev:web and dev:api in separate terminals",
-    "lint": "echo Add linters once app scaffolds are generated",
+    "dev:web": "npm --workspace web run dev",
+    "dev:api": "npm --workspace api run dev",
+    "dev": "concurrently -n web,api -c blue,green \"npm run dev:web\" \"npm run dev:api\"",
+    "build:web": "npm --workspace web run build",
+    "build:api": "npm --workspace api run build",
+    "build": "npm run build:web && npm run build:api",
+    "lint:web": "npm --workspace web run lint",
+    "lint:api": "npm --workspace api run lint",
+    "lint": "npm run lint:web && npm run lint:api",
+    "check:api": "npm --workspace api run check",
     "test": "echo Add tests once app scaffolds are generated"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "fdir": "^6.5.0",
+    "typescript": "^5.8.2",
+    "zod": "^4.3.6"
   }
 }
