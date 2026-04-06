@@ -1,19 +1,18 @@
 {
   "version": 2,
-  "functions": {
-    "api/index.ts": {
-      "runtime": "vercel-node@latest",
-      "includeFiles": "apps/api/src/**/*.ts"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api"
+      "destination": "api/index.ts"
     },
     {
       "source": "/(.*)",
-      "destination": "/apps/web"
+      "destination": "apps/web/$1"
     }
-  ]
+  ],
+  "functions": {
+    "api/index.ts": {
+      "runtime": "vercel-node@latest"
+    }
+  }
 }
