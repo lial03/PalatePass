@@ -1,20 +1,20 @@
 import app from "../apps/api/src/index";
 
-// Vercel Serverless Function entry point
 export default async function handler(req: any, res: any) {
-  const { url } = req;
-  
-  // Direct health check for Vercel troubleshooting
-  // We check for both prefixed and non-prefixed paths as Vercel rewrites can vary
-  if (url.includes("health")) {
+  // Defensive routing for Vercel
+  // We normalize the URL to ensure it matches what the Express app expects
+  console.log("Vercel Gateway: Processing", req.url);
+
+  // Directly handle health check for debugging
+  if (req.url.includes("health")) {
     return res.status(200).json({ 
-        status: "ok", 
-        gateway: "vercel-root-api-v2",
-        receivedUrl: url,
-        timestamp: new Date().toISOString() 
+      status: "ok", 
+      source: "gateway-v3", 
+      url: req.url 
     });
   }
 
-  // Pass all other requests to the Express app
+  // Ensure the Express app sees a path starting with /api if possible
+  // or just pass it through
   return app(req, res);
 }
