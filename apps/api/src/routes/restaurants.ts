@@ -338,7 +338,7 @@ restaurantsRouter.post(
           budgetTier: budgetTier ?? null,
           budgetAmount: budgetAmount ?? null,
           budgetCurrency: budgetCurrency ?? null,
-          tags: { set: tagRecords.map((t) => ({ id: t.id })) },
+          tags: { set: tagRecords.map((t: { id: string }) => ({ id: t.id })) },
         },
         include: { tags: { select: { name: true } } },
       });
@@ -354,7 +354,7 @@ restaurantsRouter.post(
           budgetCurrency: budgetCurrency ?? null,
           userId,
           restaurantId,
-          tags: { connect: tagRecords.map((t) => ({ id: t.id })) },
+          tags: { connect: tagRecords.map((t: { id: string }) => ({ id: t.id })) },
         },
         include: { tags: { select: { name: true } } },
       });
@@ -370,7 +370,7 @@ restaurantsRouter.post(
         budgetTier: (rating as unknown as { budgetTier: string | null }).budgetTier,
         budgetAmount: (rating as unknown as { budgetAmount: number | null }).budgetAmount,
         budgetCurrency: (rating as unknown as { budgetCurrency: string | null }).budgetCurrency,
-        tags: (rating.tags as TagName[]).map((t) => t.name),
+        tags: (rating.tags as TagName[]).map((t: TagName) => t.name),
         userId: rating.userId,
         restaurantId: rating.restaurantId,
         createdAt: rating.createdAt,
