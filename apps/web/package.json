@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate --schema=../api/prisma/schema.prisma && next build",
+    "build": "npm --workspace api run build && prisma generate --schema=../api/prisma/schema.prisma && next build --webpack",
     "start": "next start",
     "lint": "eslint"
   },

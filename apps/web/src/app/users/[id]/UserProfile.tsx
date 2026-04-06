@@ -167,7 +167,7 @@ function getAvatarUrl(name: string) {
 
 export default function UserProfileComponent() {
   const params = useParams<{ id: string }>();
-  const id = params.id;
+  const id = params?.id ?? "";
   const router = useRouter();
   const { user: currentUser, ready } = useAuth();
 
@@ -222,10 +222,10 @@ export default function UserProfileComponent() {
   }, [id, currentUser, ready, isSelf]);
 
   useEffect(() => {
-    if (ready) {
+    if (ready && id) {
       void loadData();
     }
-  }, [loadData, ready]);
+  }, [loadData, ready, id]);
 
   const handleFollowToggle = async () => {
     if (!currentUser) {
