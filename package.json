@@ -18,7 +18,8 @@
     "lint:api": "npm --workspace api run lint",
     "lint": "npm run lint:web && npm run lint:api",
     "check:api": "npm --workspace api run check",
-    "test": "echo Add tests once app scaffolds are generated"
+    "test": "echo Add tests once app scaffolds are generated",
+    "postinstall": "npm --workspace api run prisma:generate"
   },
   "devDependencies": {
     "@prisma/client": "^7.6.0",
