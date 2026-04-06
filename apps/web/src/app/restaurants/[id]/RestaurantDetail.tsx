@@ -9,6 +9,7 @@ import { MapPin, Clock, Star, Flame, Heart, Share2, ChevronLeft, Info, MessageSq
 import Script from "next/script";
 import { useAuth } from "../../../context/AuthContext";
 import { api, type Restaurant, type RatingSummary, type List } from "../../../lib/api";
+import { getRestaurantImage } from "../../../lib/images";
 
 function ScoreBadge({ score }: { score: number | null }) {
   if (score === null) return <span className="text-xs font-semibold text-muted">No ratings yet</span>;
@@ -189,12 +190,27 @@ export default function RestaurantDetail() {
     }
   };
 
-  const handleMockPhotoUpload = () => {
-    const mockPhotos = [
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=800&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=800&auto=format&fit=crop"
-    ];
-    setPhotoUrls(prev => [...prev, mockPhotos[prev.length % 2]]);
+  const handleRealUpload = () => {
+    if (!window.cloudinary) return;
+
+    const widget = window.cloudinary.createUploadWidget(
+      {
+        cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "demo",
+        uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "palatepass_unsigned",
+        multiple: true,
+        resourceType: "image",
+        maxFiles: 5,
+        cropping: true,
+        showSkipCropButton: true,
+        styles: { palette: { theme: 'black' } }
+      },
+      (error, result) => {
+        if (!error && result && result.event === "success") {
+          setPhotoUrls(prev => [...prev, result.info.secure_url]);
+        }
+      }
+    );
+    widget.open();
   };
 
   if (loading) {
@@ -224,7 +240,7 @@ export default function RestaurantDetail() {
     <motion.main 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-background pb-20 pt-24"
+      className="min-h-screen bg-background pb-20 pt-32"
     >
       <div className="mx-auto max-w-7xl px-6 sm:px-10">
         <button 
@@ -249,7 +265,7 @@ export default function RestaurantDetail() {
                 {restaurant.name}
               </h1>
               {isCreator && (
-                <div className="mt-4 flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-accent">
+                <div className="mt-4 flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1 text-xs font-black uppercase tracking-widest text-accent">
                    <ShieldCheck className="h-3 w-3" /> Creator
                 </div>
               )}
@@ -287,9 +303,9 @@ export default function RestaurantDetail() {
                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute left-0 top-full z-50 mt-4 w-72 rounded-3xl border border-border bg-white p-4 shadow-2xl backdrop-blur-xl"
+                            className="absolute left-0 top-full z-50 mt-4 w-72 rounded-ui border border-glass-border bg-glass-bg p-4 shadow-premium backdrop-blur-xl"
                         >
-                            <h4 className="mb-3 px-2 text-[10px] font-bold uppercase tracking-widest text-muted">Your Collections</h4>
+                            <h4 className="mb-3 px-2 text-xs font-bold uppercase tracking-widest text-muted">Your Collections</h4>
                             <div className="max-h-60 overflow-y-auto space-y-1">
                                 {userLists.length === 0 ? (
                                     <p className="px-2 py-4 text-center text-xs text-muted italic">You haven&apos;t created any collections yet.</p>
@@ -305,13 +321,13 @@ export default function RestaurantDetail() {
                                             {savingToList === list.id ? (
                                                 <Loader2 className="h-4 w-4 animate-spin text-accent" />
                                             ) : (
-                                                <span className="text-[10px] text-muted">{list._count.items}</span>
+                                                <span className="text-xs text-muted">{list._count.items}</span>
                                             )}
                                         </button>
                                     ))
                                 )}
                             </div>
-                            <Link href={`/users/${user?.id}`} className="mt-2 block rounded-xl border border-dashed border-border p-2 text-center text-[10px] font-bold uppercase tracking-widest text-accent hover:bg-surface">
+                            <Link href={`/users/${user?.id}`} className="mt-2 block rounded-xl border border-dashed border-border p-2 text-center text-xs font-bold uppercase tracking-widest text-accent hover:bg-surface">
                                 + Create New Collection
                             </Link>
                         </motion.div>
@@ -358,12 +374,13 @@ export default function RestaurantDetail() {
 
           {/* Hero Section Placeholder */}
           <div className="relative flex-1 lg:max-w-xl">
-             <div className="aspect-[4/5] w-full overflow-hidden rounded-[3rem] border border-border shadow-2xl relative">
+             <div className="aspect-[4/5] w-full overflow-hidden rounded-section border border-border shadow-premium relative">
                 <Image 
-                  src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1200&auto=format&fit=crop"
+                  src={getRestaurantImage(restaurant)}
                   alt={restaurant.name}
                   fill
                   priority
+                  unoptimized
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
@@ -384,7 +401,7 @@ export default function RestaurantDetail() {
           </div>
 
           {ratings.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-border py-24 text-center">
+            <div className="flex flex-col items-center justify-center rounded-section border-2 border-dashed border-border py-24 text-center">
               <Info className="mb-4 h-12 w-12 text-muted/20" />
               <p className="font-serif text-2xl text-muted">No ratings yet &mdash; be the first to lend your lens.</p>
               <button 
@@ -401,14 +418,14 @@ export default function RestaurantDetail() {
                   <button 
                     id="btn-lend-lens"
                     onClick={() => setShowRatingModal(true)}
-                    className="group relative flex items-center gap-3 rounded-full bg-foreground px-10 py-5 text-sm font-bold tracking-wide text-background transition hover:-translate-y-1 hover:shadow-2xl"
+                    className="group relative flex items-center gap-3 rounded-full bg-foreground px-10 py-5 text-sm font-bold tracking-wide text-background transition hover:-translate-y-1 hover:shadow-premium"
                   >
                     <Plus className="h-5 w-5 transition group-hover:rotate-90" /> Lend Your Lens
                   </button>
                </div>
                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                  {ratings.map((rating) => (
-                    <div key={rating.id} className="group relative flex flex-col rounded-[2.5rem] border border-border bg-white p-8 shadow-sm transition hover:shadow-2xl hover:shadow-black/5 hover:-translate-y-1">
+                    <div key={rating.id} className="group relative flex flex-col rounded-card border border-border bg-white p-8 shadow-sm transition hover:shadow-2xl hover:shadow-black/5 hover:-translate-y-1">
                       <div className="mb-6 flex items-center justify-between">
                         <Link href={`/users/${rating.userId}`} className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-full bg-surface-strong shadow-inner" />
@@ -418,9 +435,9 @@ export default function RestaurantDetail() {
                                 {rating.userId === user?.id && <UserCheck className="h-3 w-3 text-accent" />}
                             </div>
                             <div className="flex items-center gap-2">
-                               <p className="text-[10px] uppercase font-bold text-muted tracking-widest">Matched Taste</p>
+                               <p className="text-xs uppercase font-bold text-muted tracking-widest">Matched Taste</p>
                                {rating.budgetTier && (
-                                 <span className="text-[10px] bg-accent/5 text-accent px-1.5 py-0.5 rounded font-black italic uppercase tracking-tighter">
+                                 <span className="text-xs bg-accent/5 text-accent px-1.5 py-0.5 rounded font-black italic uppercase tracking-tighter">
                                    {rating.budgetTier}
                                  </span>
                                )}
@@ -446,12 +463,28 @@ export default function RestaurantDetail() {
                       <p className="font-serif text-lg leading-relaxed text-foreground italic line-clamp-3">
                         &ldquo;{rating.notes}&rdquo;
                       </p>
+                      
+                      {rating.photoUrls && rating.photoUrls.length > 0 && (
+                        <div className="mt-6 flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                           {rating.photoUrls.map((url, idx) => (
+                             <div key={idx} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-border shadow-sm">
+                               <Image 
+                                 src={url} 
+                                 alt={`Review photo ${idx + 1}`} 
+                                 fill 
+                                 unoptimized
+                                 className="object-cover transition duration-300 hover:scale-110" 
+                               />
+                             </div>
+                           ))}
+                        </div>
+                      )}
                       <div className="mt-auto flex items-center justify-between pt-6">
-                         <div className="text-[10px] font-bold uppercase tracking-widest text-muted">
+                         <div className="text-xs font-bold uppercase tracking-widest text-muted">
                            {new Date(rating.createdAt).toLocaleDateString()}
                          </div>
                          {rating.budgetAmount && (
-                           <div className="flex items-center gap-1 text-[10px] font-bold text-foreground">
+                           <div className="flex items-center gap-1 text-xs font-bold text-foreground">
                               <Wallet className="h-3 w-3 text-muted" /> {rating.budgetCurrency} {rating.budgetAmount}
                            </div>
                          )}
@@ -478,7 +511,7 @@ export default function RestaurantDetail() {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-4xl overflow-y-auto max-h-[90vh] rounded-[3rem] border border-white/10 bg-[#1c1917] p-8 shadow-2xl backdrop-blur-xl sm:p-14 custom-scrollbar"
+            className="relative w-full max-w-4xl overflow-y-auto max-h-[90vh] rounded-section border border-white/10 bg-surface-strong p-8 shadow-2xl backdrop-blur-xl sm:p-14 custom-scrollbar"
           >
             <button 
               onClick={() => setShowRatingModal(false)}
@@ -486,13 +519,13 @@ export default function RestaurantDetail() {
             >
               <X className="h-6 w-6" />
             </button>
-            <p className="mb-2 text-[11px] font-black uppercase tracking-[0.3em] text-accent/80">Submit Review</p>
+            <p className="mb-2 text-xs font-black uppercase tracking-[0.3em] text-accent/80">Submit Review</p>
             <h2 className="mb-12 font-serif text-5xl md:text-6xl font-bold tracking-tight text-white">Lend Your Lens</h2>
             
             <div className="grid grid-cols-1 gap-14 lg:grid-cols-2">
                <div className="space-y-12">
                   <div className="space-y-5">
-                     <label className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-[0.2em] text-surface-strong/40"><Star className="h-4 w-4" /> Your Score (1-10)</label>
+                     <label className="flex items-center gap-2.5 text-xs font-black uppercase tracking-[0.2em] text-surface-strong/40"><Star className="h-4 w-4" /> Your Score (1-10)</label>
                      <div className="flex flex-wrap gap-2.5">
                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
                          <button 
@@ -507,7 +540,7 @@ export default function RestaurantDetail() {
                   </div>
 
                   <div className="space-y-6">
-                     <label className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-[0.2em] text-surface-strong/40"><Wallet className="h-4 w-4" /> Spend & Budget</label>
+                     <label className="flex items-center gap-2.5 text-xs font-black uppercase tracking-[0.2em] text-surface-strong/40"><Wallet className="h-4 w-4" /> Spend & Budget</label>
                      <div className="grid grid-cols-2 gap-4">
                         {BUDGET_TIERS.map(tier => (
                           <button 
@@ -516,7 +549,7 @@ export default function RestaurantDetail() {
                             className={`flex flex-col items-center justify-center gap-2 rounded-2xl border px-6 py-5 transition-all ${budgetTier === tier.id ? "bg-accent border-accent text-white shadow-2xl shadow-accent/20" : "bg-white/5 border-white/10 text-white/40 hover:border-accent/40 hover:text-white"}`}
                           >
                              <tier.icon className={`h-6 w-6 mb-1 ${budgetTier === tier.id ? "text-white" : "text-accent/30"}`} />
-                             <span className="text-[10px] font-black uppercase tracking-[0.15em]">{tier.label}</span>
+                             <span className="text-xs font-black uppercase tracking-[0.15em]">{tier.label}</span>
                           </button>
                         ))}
                      </div>
@@ -528,13 +561,13 @@ export default function RestaurantDetail() {
                              value={budgetAmount}
                              onChange={e => setBudgetAmount(e.target.value)}
                              placeholder="Amount"
-                             className="w-full rounded-3xl border border-white/10 bg-black/20 pl-14 pr-6 py-5 text-lg font-bold text-white outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all placeholder:text-white/10"
+                             className="w-full rounded-ui border border-white/10 bg-black/20 pl-14 pr-6 py-5 text-lg font-bold text-white outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all placeholder:text-white/10"
                            />
                         </div>
                         <select 
                           value={budgetCurrency}
                           onChange={e => setBudgetCurrency(e.target.value)}
-                          className="rounded-3xl border border-white/10 bg-black/20 px-8 py-5 text-lg font-bold text-white outline-none focus:border-accent/50 transition-all appearance-none cursor-pointer"
+                          className="rounded-ui border border-white/10 bg-black/20 px-8 py-5 text-lg font-bold text-white outline-none focus:border-accent/50 transition-all appearance-none cursor-pointer"
                         >
                            <option value="USD">USD</option>
                            <option value="EUR">EUR</option>
@@ -546,17 +579,17 @@ export default function RestaurantDetail() {
 
                <div className="space-y-12">
                   <div className="space-y-5">
-                     <label className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-[0.2em] text-surface-strong/40"><MessageSquare className="h-4 w-4" /> Culinary Notes</label>
+                     <label className="flex items-center gap-2.5 text-xs font-black uppercase tracking-[0.2em] text-surface-strong/40"><MessageSquare className="h-4 w-4" /> Culinary Notes</label>
                      <textarea 
                        value={ratingNotes}
                        onChange={(e) => setRatingNotes(e.target.value)}
                        placeholder="Share your experience..."
-                       className="min-h-[200px] w-full rounded-3xl border border-white/10 bg-black/20 p-8 text-lg font-serif italic text-white outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all placeholder:text-white/10 resize-none leading-relaxed"
+                       className="min-h-[200px] w-full rounded-ui border border-white/10 bg-black/20 p-8 text-lg font-serif italic text-white outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all placeholder:text-white/10 resize-none leading-relaxed"
                      />
                   </div>
 
                   <div className="space-y-5">
-                     <label className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-[0.2em] text-surface-strong/40"><Camera className="h-4 w-4" /> Visual Evidence</label>
+                     <label className="flex items-center gap-2.5 text-xs font-black uppercase tracking-[0.2em] text-surface-strong/40"><Camera className="h-4 w-4" /> Visual Evidence</label>
                      <div className="flex flex-wrap gap-4">
                         {photoUrls.map((url, i) => (
                            <motion.div 
@@ -564,18 +597,19 @@ export default function RestaurantDetail() {
                               initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                               className="group relative h-24 w-24 overflow-hidden rounded-[1.5rem] border border-white/20 shadow-2xl"
                            >
-                              <Image src={url} alt="Review" fill className="object-cover" />
+                              <Image src={url} alt="Review" fill unoptimized className="object-cover" />
                               <button onClick={() => setPhotoUrls(prev => prev.filter((_, idx) => idx !== i))} className="absolute hidden group-hover:flex inset-0 items-center justify-center bg-black/60 text-white transition-all">
                                  <X className="h-6 w-6" />
                               </button>
                            </motion.div>
                         ))}
                         <button 
-                          onClick={handleMockPhotoUpload}
+                          type="button"
+                          onClick={handleRealUpload}
                           className="flex h-24 w-24 flex-col items-center justify-center gap-2 rounded-[1.5rem] border-2 border-dashed border-white/10 bg-white/5 text-white/20 hover:border-accent/50 hover:bg-white/10 hover:text-accent transition-all duration-300"
                         >
                            <Plus className="h-7 w-7" />
-                           <span className="text-[10px] font-black tracking-widest uppercase">ADD</span>
+                           <span className="text-xs font-black tracking-widest uppercase">ADD</span>
                         </button>
                      </div>
                   </div>
@@ -606,34 +640,34 @@ export default function RestaurantDetail() {
           />
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-            className="relative w-full max-w-xl rounded-[3rem] border border-white/10 bg-[#1c1917] p-8 shadow-2xl backdrop-blur-xl sm:p-12"
+            className="relative w-full max-w-xl rounded-section border border-white/10 bg-surface-strong p-8 shadow-2xl backdrop-blur-xl sm:p-12"
           >
-            <p className="mb-2 text-[11px] font-black uppercase tracking-[0.2em] text-accent">Spot Management</p>
+            <p className="mb-2 text-xs font-black uppercase tracking-[0.2em] text-accent">Spot Management</p>
             <h2 className="mb-8 font-serif text-4xl font-bold tracking-tight text-white">Edit Spot</h2>
             
             <div className="space-y-6">
                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-surface-strong/40 ml-2">Restaurant Name</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-surface-strong/40 ml-2">Restaurant Name</label>
                   <input 
                     id="edit-name"
                     value={editName} onChange={e => setEditName(e.target.value)}
-                    className="w-full rounded-3xl border border-white/10 bg-black/20 px-8 py-5 text-white outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all font-bold"
+                    className="w-full rounded-ui border border-white/10 bg-black/20 px-8 py-5 text-white outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all font-bold"
                   />
                </div>
                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-surface-strong/40 ml-2">Cuisine Type</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-surface-strong/40 ml-2">Cuisine Type</label>
                   <input 
                     id="edit-cuisine"
                     value={editCuisine} onChange={e => setEditCuisine(e.target.value)}
-                    className="w-full rounded-3xl border border-white/10 bg-black/20 px-8 py-5 text-white outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all font-bold"
+                    className="w-full rounded-ui border border-white/10 bg-black/20 px-8 py-5 text-white outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all font-bold"
                   />
                </div>
                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-surface-strong/40 ml-2">Physical Address</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-surface-strong/40 ml-2">Physical Address</label>
                   <input 
                     id="edit-address"
                     value={editAddress} onChange={e => setEditAddress(e.target.value)}
-                    className="w-full rounded-3xl border border-white/10 bg-black/20 px-8 py-5 text-white outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all font-bold"
+                    className="w-full rounded-ui border border-white/10 bg-black/20 px-8 py-5 text-white outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all font-bold"
                   />
                </div>
 
@@ -669,7 +703,7 @@ export default function RestaurantDetail() {
           />
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-            className="relative w-full max-w-md rounded-[2.5rem] border border-red-500/20 bg-surface-strong p-8 text-center shadow-2xl backdrop-blur-xl"
+            className="relative w-full max-w-md rounded-card border border-red-500/20 bg-surface-strong p-8 text-center shadow-2xl backdrop-blur-xl"
           >
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10 text-red-500">
                <AlertTriangle className="h-10 w-10" />

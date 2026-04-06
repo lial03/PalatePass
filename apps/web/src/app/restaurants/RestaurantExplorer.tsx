@@ -4,9 +4,10 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { Map as MapIcon, LayoutGrid, Search, X, MapPin, Users, Flame } from "lucide-react";
+import { Map as MapIcon, LayoutGrid, Search, X, MapPin, Users, Flame, Plus } from "lucide-react";
 import { LocationMap, type MapMarkerProps } from "../../components/Map";
 import { api, type Restaurant } from "../../lib/api";
+import { getRestaurantImage, type RestaurantWithRatings } from "../../lib/images";
 import { APIProvider, useMapsLibrary } from "@vis.gl/react-google-maps";
 import { UserSearch } from "../discover/UserSearch";
 
@@ -44,7 +45,7 @@ function CuisineAutocomplete({ value, onChange }: { value: string, onChange: (va
         value={value}
         onFocus={() => setShowSuggestions(true)}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-full border border-border/80 bg-white/70 pl-10 pr-4 py-2.5 text-sm outline-none transition-all focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent/20 placeholder:text-muted/50"
+        className="w-full rounded-full border border-glass-border bg-glass-bg pl-10 pr-4 py-2.5 text-sm outline-none transition-all focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent/20 placeholder:text-muted/50 focus-gentle"
       />
       <AnimatePresence>
         {showSuggestions && filtered.length > 0 && (
@@ -52,7 +53,7 @@ function CuisineAutocomplete({ value, onChange }: { value: string, onChange: (va
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-auto rounded-2xl border border-border bg-white/95 p-2 shadow-2xl backdrop-blur-xl"
+            className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-auto rounded-ui border border-glass-border bg-glass-bg p-2 shadow-premium backdrop-blur-xl"
           >
             {filtered.map((cuisine) => (
               <button
@@ -107,7 +108,7 @@ function CityAutocomplete({ value, onChange }: { value: string, onChange: (val: 
         type="text"
         placeholder="Location"
         defaultValue={value}
-        className="w-full rounded-full border border-border/80 bg-white/70 pl-10 pr-4 py-2.5 text-sm outline-none transition-all focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent/20 placeholder:text-muted/50"
+        className="w-full rounded-full border border-glass-border bg-glass-bg pl-10 pr-4 py-2.5 text-sm outline-none transition-all focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent/20 placeholder:text-muted/50 focus-gentle"
       />
     </div>
   );
@@ -147,32 +148,41 @@ export default function RestaurantExplorer() {
 
   return (
     <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""} libraries={['places']}>
-      <main className="min-h-screen bg-background pb-20 pt-24">
+      <main className="min-h-screen bg-background pb-20 pt-32">
         <div className="mx-auto max-w-7xl px-6 sm:px-10">
           <header className="mb-14 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
             <div className="max-w-2xl">
-               <span className="rounded-full bg-accent/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-accent">Discovery Hub</span>
+               <span className="rounded-full bg-accent/10 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-accent">Discovery Hub</span>
                <h1 className="mt-6 font-serif text-5xl font-bold tracking-tight text-foreground md:text-7xl leading-[1.1]">
                  Find Your <span className="text-accent italic">Pass</span>
                </h1>
                <p className="mt-4 text-lg text-muted font-medium">Explore world-class culinary destinations and the people who curate them.</p>
             </div>
 
-            <div className="flex items-center gap-1.5 rounded-full bg-surface-strong p-1.5 shadow-xl shadow-black/5">
-               <button 
-                 onClick={() => setActiveTab('spots')}
-                 className={`flex items-center gap-2 rounded-full px-6 py-3 text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'spots' ? 'bg-foreground text-background shadow-lg' : 'text-muted hover:text-foreground'}`}
+             <div className="flex items-center gap-4">
+               <div className="flex items-center gap-1.5 rounded-full border border-glass-border bg-glass-bg p-1.5 shadow-premium backdrop-blur-md">
+                 <button 
+                   onClick={() => setActiveTab('spots')}
+                   className={`flex items-center gap-2 rounded-full px-6 py-3 text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'spots' ? 'bg-foreground text-background shadow-lg' : 'text-muted hover:text-foreground'}`}
+                 >
+                   <Flame className="h-4 w-4" /> Spots
+                 </button>
+                 <button 
+                   onClick={() => setActiveTab('people')}
+                   className={`flex items-center gap-2 rounded-full px-6 py-3 text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'people' ? 'bg-foreground text-background shadow-lg' : 'text-muted hover:text-foreground'}`}
+                 >
+                   <Users className="h-4 w-4" /> People
+                 </button>
+               </div>
+ 
+               <Link 
+                 href="/restaurants/add"
+                 className="flex h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-premium shadow-accent/20 transition hover:bg-accent-strong hover:-translate-y-1 focus-gentle"
                >
-                 <Flame className="h-4 w-4" /> Spots
-               </button>
-               <button 
-                 onClick={() => setActiveTab('people')}
-                 className={`flex items-center gap-2 rounded-full px-6 py-3 text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'people' ? 'bg-foreground text-background shadow-lg' : 'text-muted hover:text-foreground'}`}
-               >
-                 <Users className="h-4 w-4" /> People
-               </button>
-            </div>
-          </header>
+                 <Plus className="h-6 w-6" />
+               </Link>
+             </div>
+           </header>
 
           <AnimatePresence mode="wait">
             {activeTab === 'spots' ? (
@@ -190,23 +200,26 @@ export default function RestaurantExplorer() {
                     {(cuisine || city) && (
                       <button 
                         onClick={() => { setCuisine(""); setCity(""); }}
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-foreground text-background transition-transform hover:rotate-90"
+                        aria-label="Clear filters"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-foreground text-background transition-transform hover:rotate-90 focus-gentle"
                       >
                         <X className="h-4 w-4" />
                       </button>
                     )}
                   </div>
 
-                  <div className="flex rounded-full bg-surface-strong p-1 border border-border shadow-sm">
+                  <div className="flex rounded-full border border-glass-border bg-glass-bg p-1 shadow-sm">
                     <button
                       onClick={() => setView("grid")}
-                      className={`flex h-10 w-10 items-center justify-center rounded-full transition-all ${view === "grid" ? "bg-white text-accent shadow-sm" : "text-muted hover:text-foreground"}`}
+                      aria-label="Switch to Grid View"
+                      className={`flex h-10 w-10 items-center justify-center rounded-full transition-all focus-gentle ${view === "grid" ? "bg-white text-accent shadow-sm" : "text-muted hover:text-foreground"}`}
                     >
                       <LayoutGrid className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => setView("map")}
-                      className={`flex h-10 w-10 items-center justify-center rounded-full transition-all ${view === "map" ? "bg-white text-accent shadow-sm" : "text-muted hover:text-foreground"}`}
+                      aria-label="Switch to Map View"
+                      className={`flex h-10 w-10 items-center justify-center rounded-full transition-all focus-gentle ${view === "map" ? "bg-white text-accent shadow-sm" : "text-muted hover:text-foreground"}`}
                     >
                       <MapIcon className="h-4 w-4" />
                     </button>
@@ -228,14 +241,15 @@ export default function RestaurantExplorer() {
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.05 }}
-                          className="group overflow-hidden rounded-[2.5rem] border border-border bg-white shadow-sm transition hover:shadow-2xl hover:shadow-black/5 hover:-translate-y-1"
+                          className="group overflow-hidden rounded-card border border-border bg-surface transition hover:shadow-premium hover:-translate-y-1 focus-gentle"
                         >
                           <Link href={`/restaurants/${restaurant.id}`}>
                             <div className="relative aspect-[4/3] overflow-hidden">
                               <Image
-                                src={"https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800&auto=format&fit=crop"}
+                                src={getRestaurantImage(restaurant as RestaurantWithRatings)} 
                                 alt={restaurant.name}
                                 fill
+                                unoptimized
                                 className="object-cover transition duration-700 group-hover:scale-110"
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
@@ -245,9 +259,9 @@ export default function RestaurantExplorer() {
                             </div>
                             <div className="p-8">
                                <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-[10px] font-black uppercase tracking-widest text-accent/80">{restaurant.cuisine}</span>
+                                  <span className="text-xs font-black uppercase tracking-widest text-accent/80">{restaurant.cuisine}</span>
                                   <span className="h-1 w-1 rounded-full bg-border" />
-                                  <span className="text-[10px] font-black uppercase tracking-widest text-muted">{restaurant.city}</span>
+                                  <span className="text-xs font-black uppercase tracking-widest text-muted">{restaurant.city}</span>
                                </div>
                                <h2 className="font-serif text-3xl font-bold text-foreground group-hover:text-accent transition-colors leading-tight">
                                  {restaurant.name}
@@ -264,7 +278,7 @@ export default function RestaurantExplorer() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="h-[60vh] overflow-hidden rounded-[3rem] border border-border shadow-2xl"
+                      className="h-[60vh] overflow-hidden rounded-section border border-border shadow-2xl"
                     >
                       <LocationMap markers={markers} />
                     </motion.div>

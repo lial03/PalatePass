@@ -7,8 +7,17 @@
   --surface-strong: #f5f0e6;
   --accent: #c0392b;
   --accent-strong: #922b21;
-  --muted: #78716c;
-  --border: rgba(28, 25, 23, 0.08);
+  --muted: #44403c; /* Stone-800 for high contrast AA+ readability */
+  --foreground-muted: rgba(255, 255, 255, 0.7); /* Standardized legible subtext for dark backgrounds */
+  --border: rgba(28, 25, 23, 0.1);
+  
+  /* Design System Tokens */
+  --radius-section: 3rem;
+  --radius-card: 2.5rem;
+  --radius-ui: 1.5rem;
+  --shadow-premium: 0 30px 100px -20px rgba(28, 25, 23, 0.08), 0 10px 40px -10px rgba(28, 25, 23, 0.03);
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(28, 25, 23, 0.06);
 }
 
 @theme inline {
@@ -19,9 +28,16 @@
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
   --color-muted: var(--muted);
+  --color-foreground-muted: var(--foreground-muted);
   --color-border: var(--border);
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
   --font-sans: var(--font-sora);
   --font-serif: var(--font-newsreader);
+  --radius-section: var(--radius-section);
+  --radius-card: var(--radius-card);
+  --radius-ui: var(--radius-ui);
+  --shadow-premium: var(--shadow-premium);
 }
 
 * {
@@ -49,4 +65,26 @@ a {
 
 ::selection {
   background: rgba(192, 57, 43, 0.15);
+}
+
+/* Accessible Utility Classes */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.focus-gentle {
+  outline: none;
+  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.focus-gentle:focus-visible {
+  box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.15);
 }

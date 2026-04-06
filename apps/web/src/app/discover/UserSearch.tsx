@@ -74,6 +74,7 @@ export function UserSearch() {
                     src={user.avatarUrl || getAvatarUrl(user.displayName)} 
                     alt={user.displayName}
                     fill
+                    unoptimized
                     className="object-cover"
                   />
                 </div>

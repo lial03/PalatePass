@@ -80,6 +80,11 @@ listsRouter.get("/:id", async (request, response) => {
               lat: true,
               lng: true,
               sponsored: true,
+              ratings: {
+                select: { score: true, photoUrls: true },
+                take: 1,
+                orderBy: { createdAt: 'desc' }
+              }
             }
           }
         },
