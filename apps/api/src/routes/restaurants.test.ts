@@ -7,6 +7,7 @@ const now = new Date("2026-03-15T12:00:00.000Z");
 
 const { mockPrisma } = vi.hoisted(() => ({
   mockPrisma: {
+    $queryRaw: vi.fn(),
     restaurant: {
       count: vi.fn(),
       findMany: vi.fn(),
@@ -16,6 +17,8 @@ const { mockPrisma } = vi.hoisted(() => ({
       delete: vi.fn(),
     },
     rating: {
+      aggregate: vi.fn(),
+      count: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
       create: vi.fn(),
@@ -63,12 +66,15 @@ const sampleRestaurant = {
 
 describe("restaurants routes", () => {
   beforeEach(() => {
+    mockPrisma.$queryRaw.mockReset();
     mockPrisma.restaurant.count.mockReset();
     mockPrisma.restaurant.findMany.mockReset();
     mockPrisma.restaurant.findUnique.mockReset();
     mockPrisma.restaurant.create.mockReset();
     mockPrisma.restaurant.update.mockReset();
     mockPrisma.restaurant.delete.mockReset();
+    mockPrisma.rating.aggregate.mockReset();
+    mockPrisma.rating.count.mockReset();
     mockPrisma.rating.findMany.mockReset();
     mockPrisma.rating.findUnique.mockReset();
     mockPrisma.rating.create.mockReset();
@@ -209,22 +215,17 @@ describe("restaurants routes", () => {
 
   it("returns analytics snapshot for a restaurant", async () => {
     mockPrisma.restaurant.findUnique.mockResolvedValueOnce({ id: "rest_1" });
-    mockPrisma.rating.findMany.mockResolvedValueOnce([
-      {
-        score: 5,
-        createdAt: new Date("2026-03-14T12:00:00.000Z"),
-        tags: [{ name: "cozy" }, { name: "date-night" }],
-      },
-      {
-        score: 4,
-        createdAt: new Date("2026-03-10T12:00:00.000Z"),
-        tags: [{ name: "cozy" }],
-      },
-      {
-        score: 3,
-        createdAt: new Date("2026-02-20T12:00:00.000Z"),
-        tags: [{ name: "affordable" }],
-      },
+    
+    mockPrisma.rating.aggregate.mockResolvedValueOnce({
+      _avg: { score: 4 },
+      _count: { _all: 3 }
+    });
+
+    mockPrisma.rating.count.mockResolvedValueOnce(3);
+    mockPrisma.rating.count.mockResolvedValueOnce(1);
+
+    mockPrisma.$queryRaw.mockResolvedValueOnce([
+       { name: "cozy", count: 2n }
     ]);
 
     const res = await request(makeTestApp()).get("/restaurants/rest_1/analytics");

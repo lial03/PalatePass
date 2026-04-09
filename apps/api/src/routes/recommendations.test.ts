@@ -45,6 +45,7 @@ describe("recommendations routes", () => {
 
   it("returns empty feed when user follows nobody", async () => {
     mockPrisma.follow.findMany.mockResolvedValueOnce([]);
+    mockPrisma.rating.findMany.mockResolvedValueOnce([]);
 
     const res = await request(makeTestApp())
       .get("/recommendations/feed")
