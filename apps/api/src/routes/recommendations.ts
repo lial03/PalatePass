@@ -52,13 +52,43 @@ recommendationsRouter.get(
     const followingIds = follows.map((f: { followingId: string }) => f.followingId);
 
     if (followingIds.length === 0) {
-      return response.json({
-        data: [],
-        meta: {
-          followingCount: 0,
-          candidateRatings: 0,
-          limit,
+      const globalRatings = await prisma.rating.findMany({
+        where: { score: { gte: 4 } },
+        include: {
+          user: { select: { id: true, displayName: true } },
+          restaurant: { select: { id: true, name: true, address: true, city: true, cuisine: true, lat: true, lng: true } },
         },
+        orderBy: { score: "desc" },
+        take: 100,
+      });
+
+      const gMap = new Map<string, RecommendationAggregate & { totalScore: number; endorsers: Set<string> }>();
+      for (const rating of globalRatings as unknown as NetworkRating[]) {
+        const key = rating.restaurant.id;
+        const existing = gMap.get(key);
+        if (!existing) {
+          gMap.set(key, { ...rating.restaurant, restaurantId: rating.restaurant.id, endorsementCount: 1, networkAverageScore: rating.score, recommendationScore: rating.score, endorsedBy: [], sampleNotes: rating.notes ? [rating.notes] : [], totalScore: rating.score, endorsers: new Set([rating.user.displayName]) });
+          continue;
+        }
+        existing.endorsementCount += 1;
+        existing.totalScore += rating.score;
+        existing.endorsers.add(rating.user.displayName);
+        if (rating.notes && existing.sampleNotes.length < 3) existing.sampleNotes.push(rating.notes);
+      }
+
+      const discoveryFeed = [...gMap.values()].map(item => {
+        const average = item.totalScore / item.endorsementCount;
+        return {
+          ...item,
+          networkAverageScore: Math.round(average * 10) / 10,
+          recommendationScore: Math.round((average * Math.log2(item.endorsementCount + 1)) * 10) / 10,
+          endorsedBy: [...item.endorsers].slice(0, 5),
+        };
+      }).sort((a, b) => b.recommendationScore - a.recommendationScore).slice(0, limit);
+
+      return response.json({
+        data: discoveryFeed,
+        meta: { followingCount: 0, candidateRatings: globalRatings.length, limit, isDiscoveryFallback: true },
       });
     }
 

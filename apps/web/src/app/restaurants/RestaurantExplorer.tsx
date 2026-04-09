@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { APIProvider, useMapsLibrary } from "@vis.gl/react-google-maps";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -16,7 +17,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LocationMap, type MapMarkerProps } from "../../components/Map";
-import { api, type Restaurant } from "../../lib/api";
+import { api } from "../../lib/api";
 import {
   getRestaurantImage,
   type RestaurantWithRatings,
@@ -164,11 +165,17 @@ function CityAutocomplete({
 
 export default function RestaurantExplorer() {
   const [activeTab, setActiveTab] = useState<"spots" | "people">("spots");
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"grid" | "map">("grid");
   const [cuisine, setCuisine] = useState("");
   const [city, setCity] = useState("");
+
+  const { data: restaurants = [], isLoading: loading } = useQuery({
+    queryKey: ['restaurants', cuisine, city],
+    queryFn: async () => {
+      const res = await api.restaurants.list({ cuisine, city });
+      return res.data;
+    }
+  });
 
   const markers = useMemo<MapMarkerProps[]>(
     () =>
@@ -182,21 +189,6 @@ export default function RestaurantExplorer() {
         .filter((m) => m.lat !== 0 && m.lng !== 0),
     [restaurants],
   );
-
-  useEffect(() => {
-    const fetchRestaurants = async () => {
-      setLoading(true);
-      try {
-        const res = await api.restaurants.list({ cuisine, city });
-        setRestaurants(res.data);
-      } catch (err) {
-        console.error("Failed to load restaurants", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    void fetchRestaurants();
-  }, [cuisine, city]);
 
   return (
     <APIProvider
@@ -307,7 +299,7 @@ export default function RestaurantExplorer() {
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.05 }}
-                          className="group overflow-hidden rounded-card border border-border bg-surface transition hover:shadow-premium hover:-translate-y-1 focus-gentle"
+                          className="group overflow-hidden rounded-card border border-border bg-surface transition-all duration-300 hover:shadow-premium hover:-translate-y-1 focus-gentle"
                         >
                           <Link href={`/restaurants/${restaurant.id}`}>
                             <div className="relative aspect-4/3 overflow-hidden">
@@ -318,7 +310,7 @@ export default function RestaurantExplorer() {
                                 alt={restaurant.name}
                                 fill
                                 unoptimized
-                                className="object-cover transition duration-700 group-hover:scale-110"
+                                className="object-cover transition-transform duration-700 group-hover:scale-105"
                               />
                               <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
                               <div className="absolute left-6 top-6 flex h-12 w-12 items-center justify-center rounded-full bg-background shadow-xl">
@@ -362,21 +354,33 @@ export default function RestaurantExplorer() {
                 </AnimatePresence>
 
                 {!loading && restaurants.length === 0 && (
-                  <div className="py-32 text-center">
-                    <Search className="mx-auto h-16 w-16 text-muted/20 mb-4" />
-                    <h3 className="font-serif text-3xl text-muted">
-                      No spots found in this treasury.
-                    </h3>
-                    <button
-                      onClick={() => {
-                        setCuisine("");
-                        setCity("");
-                      }}
-                      className="mt-4 text-accent font-bold hover:underline"
-                    >
-                      Clear Filters
-                    </button>
-                  </div>
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="relative my-12 overflow-hidden rounded-section border border-border bg-gradient-to-b from-surface to-background py-24 text-center shadow-premium"
+                  >
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+                    <div className="relative z-10 flex flex-col items-center">
+                      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-accent/5 text-accent shadow-inner ring-1 ring-accent/10">
+                        <Search className="h-8 w-8" />
+                      </div>
+                      <h3 className="font-serif text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+                        No spots found in this realm.
+                      </h3>
+                      <p className="mt-4 max-w-md text-base text-muted">
+                        We couldn&apos;t find any curations matching your precise filters. Try broadening your horizons or removing some constraints.
+                      </p>
+                      <button
+                        onClick={() => {
+                          setCuisine("");
+                          setCity("");
+                        }}
+                        className="mt-8 rounded-full bg-accent px-8 py-3.5 text-sm font-bold text-white shadow-md shadow-accent/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-lg focus-gentle cursor-pointer"
+                      >
+                        Clear Filters
+                      </button>
+                    </div>
+                  </motion.div>
                 )}
               </motion.div>
             ) : (

@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   experimental: {
     externalDir: true,
   },
+  turbopack: {},
   webpack: (config) => {
     config.resolve.extensionAlias = {
       ...(config.resolve.extensionAlias ?? {}),

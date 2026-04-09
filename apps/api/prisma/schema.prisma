@@ -21,7 +21,8 @@ model User {
   ratings      Rating[]
   followers    Follow[]     @relation("UserFollowers")
   following    Follow[]     @relation("UserFollowing")
-  lists        List[]
+  lists           List[]
+  affiliateClicks AffiliateClick[]
 }
 
 model Restaurant {
@@ -45,6 +46,7 @@ model Restaurant {
   creator         User       @relation(fields: [createdBy], references: [id])
   ratings         Rating[]
   listItems       ListItem[]
+  affiliateClicks AffiliateClick[]
 }
 
 model Rating {
@@ -106,4 +108,17 @@ model ListItem {
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
 
   @@unique([listId, restaurantId])
+}
+
+model AffiliateClick {
+  id           String     @id @default(cuid())
+  restaurantId String
+  partner      String
+  destination  String
+  context      String?
+  userId       String?
+  createdAt    DateTime   @default(now())
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  user         User?      @relation(fields: [userId], references: [id])
 }

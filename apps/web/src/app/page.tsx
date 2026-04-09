@@ -16,7 +16,11 @@ export default function Home() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push(`/restaurants`); // Simple mock routing for now
+    if (searchQuery.trim()) {
+      router.push(`/restaurants?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push(`/restaurants`);
+    }
   };
 
   return (

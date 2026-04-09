@@ -225,50 +225,40 @@ restaurantsRouter.get("/:id/analytics", async (request, response) => {
     return;
   }
 
-  const rows = await prisma.rating.findMany({
+  const aggregate = await prisma.rating.aggregate({
     where: { restaurantId: restaurantIdParam },
-    select: {
-      score: true,
-      createdAt: true,
-      tags: { select: { name: true } },
-    },
+    _avg: { score: true },
+    _count: { _all: true }
   });
 
-  const ratingCount = rows.length;
-  const averageScore =
-    ratingCount > 0
-      ? Math.round((rows.reduce((sum: number, row: { score: number }) => sum + row.score, 0) / ratingCount) * 10) / 10
-      : null;
+  const ratingCount = aggregate._count._all;
+  const averageScore = aggregate._avg.score !== null ? Math.round(aggregate._avg.score * 10) / 10 : null;
 
-  const now = Date.now();
-  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
-  const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  let last7Days = 0;
-  let last30Days = 0;
-  const tagCounts = new Map<string, number>();
-
-  for (const row of rows) {
-    const created = row.createdAt.getTime();
-    if (created >= thirtyDaysAgo) {
-      last30Days += 1;
-      if (created >= sevenDaysAgo) {
-        last7Days += 1;
-      }
-    }
-
-    for (const tag of row.tags) {
-      tagCounts.set(tag.name, (tagCounts.get(tag.name) ?? 0) + 1);
-    }
-  }
-
-  const topTags = Array.from(tagCounts.entries())
-    .sort((a, b) => {
-      if (b[1] !== a[1]) return b[1] - a[1];
-      return a[0].localeCompare(b[0]);
+  const [last30Days, last7Days] = await Promise.all([
+    prisma.rating.count({
+      where: { restaurantId: restaurantIdParam, createdAt: { gte: thirtyDaysAgo } }
+    }),
+    prisma.rating.count({
+      where: { restaurantId: restaurantIdParam, createdAt: { gte: sevenDaysAgo } }
     })
-    .slice(0, 5)
-    .map(([name, count]) => ({ name, count }));
+  ]);
+
+  const tagsRows = await prisma.$queryRaw<{name: string, count: bigint}[]>`
+    SELECT t.name, COUNT(r.id) as count
+    FROM "Tag" t
+    JOIN "_RatingTags" rt ON t.id = rt."B"
+    JOIN "Rating" r ON rt."A" = r.id
+    WHERE r."restaurantId" = ${restaurantIdParam}
+    GROUP BY t.name
+    ORDER BY count DESC
+    LIMIT 5
+  `;
+
+  const topTags = tagsRows.map(row => ({ name: row.name, count: Number(row.count) }));
 
   response.json({
     analytics: {
