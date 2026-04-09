@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Newsreader, Sora } from "next/font/google";
 import { NavBar } from "../components/NavBar";
+import { SpotlightProvider } from "../components/SpotlightProvider";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -32,6 +33,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Providers>
+          <SpotlightProvider />
           <NavBar />
           {children}
         </Providers>

@@ -15,8 +15,12 @@ function RecommendationCard({ rec }: { rec: Recommendation }) {
   return (
     <Link
       href={`/restaurants/${rec.restaurantId}`}
-      className="group relative flex h-[28rem] flex-col justify-end overflow-hidden rounded-[2rem] border border-border/40 bg-surface shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_25px_50px_rgba(192,57,43,0.15)]"
+      className="spotlight-card group relative flex h-[28rem] flex-col justify-end overflow-hidden rounded-[2rem] border border-border/60 bg-surface shadow-md transition-all duration-300 hover:-translate-y-2 hover:border-accent/40 hover:shadow-[0_25px_50px_rgba(192,57,43,0.15)]"
     >
+      <div 
+        className="pointer-events-none absolute -inset-px z-20 rounded-[inherit] opacity-0 transition duration-300 group-hover:opacity-100 mix-blend-overlay"
+        style={{ background: "radial-gradient(400px circle at var(--mouse-x, 0) var(--mouse-y, 0), rgba(255,255,255,0.8), transparent 40%)" }}
+      />
       {/* Background Image Overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"

@@ -164,6 +164,7 @@ function CityAutocomplete({
 }
 
 export default function RestaurantExplorer() {
+  const [hoveredRestaurantId, setHoveredRestaurantId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"spots" | "people">("spots");
   const [view, setView] = useState<"grid" | "map">("grid");
   const [cuisine, setCuisine] = useState("");
@@ -266,7 +267,7 @@ export default function RestaurantExplorer() {
                     )}
                   </div>
 
-                  <div className="flex rounded-full border border-border bg-surface p-1 shadow-sm">
+                  <div className="flex md:hidden rounded-full border border-border bg-surface p-1 shadow-sm">
                     <button
                       onClick={() => setView("grid")}
                       aria-label="Switch to Grid View"
@@ -284,104 +285,112 @@ export default function RestaurantExplorer() {
                   </div>
                 </div>
 
-                <AnimatePresence mode="wait">
-                  {view === "grid" ? (
-                    <motion.div
-                      key="grid"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"
-                    >
-                      {restaurants.map((restaurant, i) => (
+                <div className="flex flex-col md:flex-row gap-10">
+                  {/* Discovery List */}
+                  <div className={`flex-1 md:w-3/5 ${view === "map" ? "hidden md:block" : "block"}`}>
+                    <AnimatePresence mode="wait">
+                      {restaurants.length > 0 ? (
                         <motion.div
-                          key={restaurant.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.05 }}
-                          className="group overflow-hidden rounded-card border border-border bg-surface transition-all duration-300 hover:shadow-premium hover:-translate-y-1 focus-gentle"
+                          key="grid-content"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="grid gap-8 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2"
                         >
-                          <Link href={`/restaurants/${restaurant.id}`}>
-                            <div className="relative aspect-4/3 overflow-hidden">
-                              <Image
-                                src={getRestaurantImage(
-                                  restaurant as RestaurantWithRatings,
-                                )}
-                                alt={restaurant.name}
-                                fill
-                                unoptimized
-                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                          {restaurants.map((restaurant, i) => (
+                            <motion.div
+                              key={restaurant.id}
+                              onMouseEnter={() => setHoveredRestaurantId(restaurant.id)}
+                              onMouseLeave={() => setHoveredRestaurantId(null)}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ 
+                                opacity: 1, 
+                                y: hoveredRestaurantId === restaurant.id ? -12 : 0,
+                                scale: hoveredRestaurantId === restaurant.id ? 1.02 : 1 
+                              }}
+                              transition={{ delay: i * 0.05 }}
+                              className={`spotlight-card relative group overflow-hidden rounded-card border transition-all duration-300 shadow-premium focus-gentle ${hoveredRestaurantId === restaurant.id ? 'border-accent ring-2 ring-accent/20 bg-surface-strong' : 'border-border bg-surface'}`}
+                            >
+                              <div 
+                                className="pointer-events-none absolute -inset-px z-20 rounded-[inherit] opacity-0 transition duration-300 group-hover:opacity-100 mix-blend-overlay"
+                                style={{ background: "radial-gradient(400px circle at var(--mouse-x, 0) var(--mouse-y, 0), rgba(255,255,255,0.6), transparent 40%)" }}
                               />
-                              <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
-                              <div className="absolute left-6 top-6 flex h-12 w-12 items-center justify-center rounded-full bg-background shadow-xl">
-                                <span className="font-serif text-sm font-black text-accent">
-                                  {restaurant.averageScore?.toFixed(1) || "-"}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="p-8">
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-xs font-black uppercase tracking-widest text-accent/80">
-                                  {restaurant.cuisine}
-                                </span>
-                                <span className="h-1 w-1 rounded-full bg-border" />
-                                <span className="text-xs font-black uppercase tracking-widest text-muted">
-                                  {restaurant.city}
-                                </span>
-                              </div>
-                              <h2 className="font-serif text-3xl font-bold text-foreground group-hover:text-accent transition-colors leading-tight">
-                                {restaurant.name}
-                              </h2>
-                              <p className="mt-2 text-sm text-muted font-medium line-clamp-1">
-                                {restaurant.address}
-                              </p>
-                            </div>
-                          </Link>
+                              <Link href={`/restaurants/${restaurant.id}`}>
+                                <div className="relative aspect-4/3 overflow-hidden">
+                                  <Image
+                                    src={getRestaurantImage(
+                                      restaurant as RestaurantWithRatings,
+                                    )}
+                                    alt={restaurant.name}
+                                    fill
+                                    unoptimized
+                                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                  />
+                                  <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
+                                  <div className="absolute left-6 top-6 flex h-12 w-12 items-center justify-center rounded-full bg-background shadow-xl">
+                                    <span className="font-serif text-sm font-black text-accent">
+                                      {restaurant.averageScore?.toFixed(1) || "-"}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="p-8">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-xs font-black uppercase tracking-widest text-accent/80">
+                                      {restaurant.cuisine}
+                                    </span>
+                                    <span className="h-1 w-1 rounded-full bg-border" />
+                                    <span className="text-xs font-black uppercase tracking-widest text-muted">
+                                      {restaurant.city}
+                                    </span>
+                                  </div>
+                                  <h2 className="font-serif text-3xl font-bold text-foreground group-hover:text-accent transition-colors leading-tight">
+                                    {restaurant.name}
+                                  </h2>
+                                  <p className="mt-2 text-sm text-muted font-medium line-clamp-1">
+                                    {restaurant.address}
+                                  </p>
+                                </div>
+                              </Link>
+                            </motion.div>
+                          ))}
                         </motion.div>
-                      ))}
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="map"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="h-[60vh] overflow-hidden rounded-section border border-border shadow-2xl"
-                    >
-                      <LocationMap markers={markers} />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                      ) : !loading ? (
+                        <motion.div 
+                          key="no-results"
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="relative my-12 overflow-hidden rounded-section border border-border bg-gradient-to-b from-surface to-background py-24 text-center shadow-premium"
+                        >
+                          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+                          <div className="relative z-10 flex flex-col items-center">
+                            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-accent/5 text-accent shadow-inner ring-1 ring-accent/10">
+                              <Search className="h-8 w-8" />
+                            </div>
+                            <h3 className="font-serif text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+                              No spots found in this realm.
+                            </h3>
+                            <p className="mt-4 max-w-md text-base text-muted">
+                              We couldn&apos;t find any curations matching your precise filters.
+                            </p>
+                          </div>
+                        </motion.div>
+                      ) : null}
+                    </AnimatePresence>
+                  </div>
 
-                {!loading && restaurants.length === 0 && (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="relative my-12 overflow-hidden rounded-section border border-border bg-gradient-to-b from-surface to-background py-24 text-center shadow-premium"
-                  >
-                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
-                    <div className="relative z-10 flex flex-col items-center">
-                      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-accent/5 text-accent shadow-inner ring-1 ring-accent/10">
-                        <Search className="h-8 w-8" />
-                      </div>
-                      <h3 className="font-serif text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-                        No spots found in this realm.
-                      </h3>
-                      <p className="mt-4 max-w-md text-base text-muted">
-                        We couldn&apos;t find any curations matching your precise filters. Try broadening your horizons or removing some constraints.
-                      </p>
-                      <button
-                        onClick={() => {
-                          setCuisine("");
-                          setCity("");
-                        }}
-                        className="mt-8 rounded-full bg-accent px-8 py-3.5 text-sm font-bold text-white shadow-md shadow-accent/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-lg focus-gentle cursor-pointer"
-                      >
-                        Clear Filters
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
+                  {/* Discovery Map */}
+                  <div className={`flex-1 md:w-2/5 ${view === "grid" ? "hidden md:block" : "block"} md:sticky md:top-32 md:h-[calc(100vh-16rem)]`}>
+                    <motion.div
+                      className="h-[60vh] md:h-full overflow-hidden rounded-section border border-border shadow-2xl overflow-hidden"
+                    >
+                      <LocationMap 
+                        markers={markers} 
+                        hoveredMarkerId={hoveredRestaurantId} 
+                        onMarkerHover={setHoveredRestaurantId}
+                      />
+                    </motion.div>
+                  </div>
+                </div>
               </motion.div>
             ) : (
               <motion.div
